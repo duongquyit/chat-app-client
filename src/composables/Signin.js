@@ -17,12 +17,13 @@ const afterLoginSuccess = (userData) => {
   socket.auth = currentUser;
   router.push('chat');
 }
+
 const setLoginStatus = () => {
   isPending.value = true;
   errorMessage.value = '';
 }
 
-const signin = async (email, password) => {
+const signin = async ({ email, password }) => {
   try {
     setLoginStatus();
     const res = await signInWithEmailAndPassword(auth, email, password);
@@ -74,7 +75,5 @@ const signinWithFacebook = async () => {
     isPending.value = false;
   }
 }
-
-
 
 export { signin, signinWithGoogle, signinWithFacebook, isPending, errorMessage }

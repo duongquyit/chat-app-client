@@ -18,16 +18,16 @@
         v-if="create"
         :class="{ darkMode: isDarkMode }"
         type="text"
-        v-model="groupChatName"
+        v-model="chatGroup.name"
       />
       <!-- update template -->
       <span v-if="!create" class="group-chat-name">
-        <p v-if="!isEditGroupChatName">{{ groupChatName }}</p>
+        <p v-if="!isEditGroupChatName">{{ chatGroup.name }}</p>
         <input
           v-else
           type="text"
           @keydown.enter="handleKeydownInput"
-          v-model="groupChatName"
+          v-model="chatGroup.name"
         />
         <span class="edit-group-chat-name-icon" @click="handleClickEditIcon">
           <span v-if="!isEditGroupChatName">
@@ -54,12 +54,12 @@
         @drop.prevent="handleUploadImageGroup"
       >
         <span
-          v-if="!groupChatPhotoURL"
+          v-if="!chatGroup.photoURL"
           style="font-size: 2em; color: #80808082"
         >
           <i class="fa-solid fa-plus"></i>
         </span>
-        <img v-else :src="groupChatPhotoURL" alt="" />
+        <img v-else :src="chatGroup.photoURL" alt="" />
       </label>
     </div>
     <!-- GROUP CHAT LIST USER -->
@@ -72,13 +72,13 @@
       @drop="handleDropUser"
       ref="listUsersDropScroll"
     >
-      <p v-if="!listUsersDrop.length" class="message-list-drop-user-empty">
+      <p v-if="!chatGroup.members.length" class="message-list-drop-user-empty">
         {{ $t("message.group.groupMembersDropMessage") }}
       </p>
       <div
         class="create-new-group-chat-form-member-item"
         v-else
-        v-for="user in listUsersDrop"
+        v-for="user in chatGroup.members"
         :key="user.uid"
       >
         <img :src="user.photoURL" alt="" />
@@ -92,10 +92,12 @@
     </div>
     <button
       class="new-group-chat-submit-btn"
-      :class="{ notAllowSubmitButton: !groupChatName || !listUsersDrop.length }"
+      :class="{
+        notAllowSubmitButton: !chatGroup.name || !chatGroup.members.length,
+      }"
       v-show="create"
       type="submit"
-      :disabled="!groupChatName || !listUsersDrop.length"
+      :disabled="!chatGroup.name || !chatGroup.members.length"
     >
       {{ $t("message.group.groupCreateBtn") }}
     </button>
@@ -103,7 +105,7 @@
 </template>
 
 <script>
-import { ref } from "@vue/reactivity";
+import { reactive, ref } from "@vue/reactivity";
 import { nextTick, watch } from "@vue/runtime-core";
 import { useI18n } from "vue-i18n";
 
@@ -115,37 +117,43 @@ import currentUser from "@composables/CurrentUser";
 
 export default {
   name: "GroupChatForm",
-  props: ["create", "group"],
+  props: {
+    create: {
+      type: Boolean,
+    },
+    group: {
+      type: Object,
+    }
+  },
   setup(props, { emit }) {
     const listUsersDropScroll = ref(null);
-    const groupChatName = ref(props?.group?.groupChatName || "");
-    const listUsersDrop = ref(props?.group?.members || []);
-    const groupChatPhotoURL = ref(props?.group?.groupChatPhotoURL || "");
     const isEditGroupChatName = ref(false);
+
+    const chatGroup = reactive({
+      name: props.group?.groupChatName || "",
+      photoURL: props.group?.groupChatPhotoURL || "",
+      members: props.group?.members || [],
+    });
 
     const { t } = useI18n();
 
     const handleSubmitGroupChatForm = () => {
-      if (listUsersDrop.value.length < 1) {
+      const { name, photoURL, members } = chatGroup;
+      if (members.length < 1) {
         toast.error(t("toast.notEnoughMembers"));
         return;
       }
-      emit(
-        "createGroupChat",
-        listUsersDrop.value,
-        currentUser,
-        groupChatName.value,
-        groupChatPhotoURL.value
-      );
+      emit("createGroupChat", members, currentUser, name, photoURL);
     };
 
     const handleKeydownInput = () => {
-      if (!groupChatName.value.trim()) {
+      const { name } = chatGroup;
+      if (!name.trim()) {
         toast.error(t("toast.nameBlank"));
         return;
       }
-      if (groupChatName.value != props.group.groupChatName) {
-        emit("updateGroupChatName", groupChatName.value);
+      if (name != props.group.groupChatName) {
+        emit("updateGroupChatName", name);
         isEditGroupChatName.value = false;
         return;
       }
@@ -159,9 +167,9 @@ export default {
     const handleClickEditIcon = () => {
       if (
         isEditGroupChatName.value &&
-        groupChatName.value != props.group.groupChatName
+        chatGroup.name != props.group.groupChatName
       ) {
-        groupChatName.value = props.group.groupChatName;
+        chatGroup.name = props.group.groupChatName;
       }
       isEditGroupChatName.value = !isEditGroupChatName.value;
     };
@@ -171,15 +179,17 @@ export default {
       const imgFile = evt?.dataTransfer?.files[0] || evt?.target?.files[0];
       if (imgFile) {
         const { secure_url } = await uploadImageToCloud(imgFile);
-        groupChatPhotoURL.value = secure_url;
+        chatGroup.photoURL = secure_url;
+
+        const { name, photoURL, members } = chatGroup;
 
         // handle when update form
         if (!props.create) {
           updateGroupChat({
             groupChatId: props.group.groupChatId,
-            groupChatName: groupChatName.value,
-            groupChatPhotoURL: secure_url,
-            members: listUsersDrop.value,
+            groupChatName: name,
+            groupChatPhotoURL: photoURL,
+            members: members,
           });
         }
       }
@@ -187,20 +197,18 @@ export default {
 
     // drag and drop user
     const handleDropUser = (e) => {
+      const { name, photoURL, members } = chatGroup;
       const userDrop = JSON.parse(e.dataTransfer.getData("user"));
-      const userDropExist = listUsersDrop.value.find(
-        ({ uid }) => uid == userDrop.uid
-      );
+      const userDropExist = members.find(({ uid }) => uid == userDrop.uid);
       if (!userDropExist && userDrop.uid != currentUser.uid) {
-        listUsersDrop.value.push(userDrop);
-
+        members.push(userDrop);
         // handle when update form
         if (!props.create) {
           updateGroupChat({
             groupChatId: props.group.groupChatId,
-            groupChatName: groupChatName.value,
-            groupChatPhotoURL: groupChatPhotoURL.value,
-            members: listUsersDrop.value,
+            groupChatName: name,
+            groupChatPhotoURL: photoURL,
+            members: members,
           });
         }
         return;
@@ -210,8 +218,9 @@ export default {
 
     // remove user from list user droped
     const handleRemoveUserOutListUserDrop = (user) => {
-      const index = listUsersDrop.value.findIndex(({ uid }) => uid == user.uid);
-      if (listUsersDrop.value.length <= 2) {
+      const { name, photoURL, members } = chatGroup;
+      const index = members.findIndex(({ uid }) => uid == user.uid);
+      if (members.length <= 2) {
         toast.error(t("toast.notEnoughMembers"));
         return;
       }
@@ -221,21 +230,21 @@ export default {
           toast.error(t("toast.bossConfirm"));
           return;
         }
-        listUsersDrop.value.splice(index, 1);
+        members.value.splice(index, 1);
         updateGroupChat({
           groupChatId: props.group.groupChatId,
-          groupChatName: groupChatName.value,
-          groupChatPhotoURL: groupChatPhotoURL.value,
-          members: listUsersDrop.value,
+          groupChatName: name,
+          groupChatPhotoURL: photoURL,
+          members: members,
         });
         return;
       }
       // handle when create format
-      listUsersDrop.value.splice(index, 1);
+      members.splice(index, 1);
     };
 
     watch(
-      listUsersDrop,
+      chatGroup.members,
       async () => {
         await nextTick();
         listUsersDropScroll.value.scrollTop =
@@ -245,11 +254,9 @@ export default {
     );
 
     return {
-      listUsersDrop,
-      groupChatName,
+      chatGroup,
       currentUser,
       listUsersDropScroll,
-      groupChatPhotoURL,
       isPending,
       isEditGroupChatName,
       isDarkMode,

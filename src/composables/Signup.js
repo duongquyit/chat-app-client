@@ -7,7 +7,7 @@ import router from '@router';
 const errorMessage = ref("");
 const isPending = ref(false);
 
-const signup = async (email, password, name) => {
+const signup = async ({ email, password, name }) => {
   try {
     isPending.value = true;
     errorMessage.value = '';

@@ -16,12 +16,19 @@
 import { isDarkMode } from "@composables/GlobalVariables";
 export default {
   name: "MessageHeader",
-  props: ["chatMessageHeaderAvatar", "chatMessageHeaderName"],
+  props: {
+    chatMessageHeaderAvatar: {
+      type: String,
+    },
+    chatMessageHeaderName: {
+      type: String,
+    },
+  },
   setup() {
     return { isDarkMode };
   },
 };
 </script>
 <style scoped>
-@import '@assets/style/message_header.css';
+@import "@assets/style/message_header.css";
 </style>

@@ -4,20 +4,17 @@
     <div class="signup-form-container">
       <div class="siggup-form">
         <h3>{{ $t("signup.title") }}</h3>
-        <form
-          @submit.prevent="
-            $emit('signup', email, password, name),
-              (email = ''),
-              (password = ''),
-              (name = '')
-          "
-        >
-          <input type="text" :placeholder="$t('signup.name')" v-model="name" />
-          <input type="email" placeholder="Email" v-model="email" />
+        <form @submit.prevent="handleSignup">
+          <input
+            type="text"
+            :placeholder="$t('signup.name')"
+            v-model="signup.name"
+          />
+          <input type="email" placeholder="Email" v-model="signup.email" />
           <input
             type="password"
             :placeholder="$t('signup.password')"
-            v-model="password"
+            v-model="signup.password"
           />
           <span class="signup-form-error-message" v-show="errorMessage">
             {{ errorMessage }}
@@ -36,20 +33,33 @@
 </template>
 
 <script>
-import { ref } from "@vue/reactivity";
+import { reactive, ref } from "@vue/reactivity";
 import Loading from "@components/Template/Loading.vue";
 export default {
   name: "SignupForm",
-  props: ["isPending", "errorMessage"],
+  props: {
+    isPending: {
+      type: Boolean,
+    },
+    errorMessage: {
+      type: String,
+    },
+  },
   components: {
     Loading,
   },
-  setup() {
-    const name = ref("");
-    const email = ref("");
-    const password = ref("");
+  setup(props, { emit }) {
+    const signupData = reactive({
+      name: "",
+      email: "",
+      password: "",
+    });
 
-    return { name, email, password };
+    const handleSignup = () => {
+      emit("signup", signupData);
+    };
+
+    return { signupData, handleSignup };
   },
 };
 </script>

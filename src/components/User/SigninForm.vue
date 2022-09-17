@@ -3,11 +3,11 @@
     <div class="signin-form-container">
       <div class="signin-form">
         <h3>{{ $t("signin.title") }}</h3>
-        <form @submit.prevent="$emit('signin', email, password)">
-          <input type="email" v-model="email" placeholder="Email" />
+        <form @submit.prevent="handleSigninWithEmailAndPassword">
+          <input type="email" v-model="loginData.email" placeholder="Email" />
           <input
             type="password"
-            v-model="password"
+            v-model="loginData.password"
             :placeholder="$t('signin.title')"
           />
           <span class="signin-error-message" v-show="errorMessage">
@@ -20,21 +20,17 @@
         <span>Or</span>
       </div>
       <span
-        @click="$emit('signinWithGoogle')"
+        @click="handleSigninWithGoogle"
         class="signin-with-society-network gg-login"
         ><span class="icon-custom"><i class="fa-brands fa-google"></i></span
-        >&ensp;{{
-          $t("signin.societyNetWork", { name: "Google" })
-        }}</span
+        >&ensp;{{ $t("signin.societyNetWork", { name: "Google" }) }}</span
       >
       <span
-        @click="$emit('signinWithFacebook')"
+        @click="handleSigninWithFacebook"
         class="signin-with-society-network fb-login"
       >
         <span class="icon-custom"><i class="fa-brands fa-facebook"></i></span
-        >&ensp;{{
-          $t("signin.societyNetWork", { name: "Facebook" })
-        }}</span
+        >&ensp;{{ $t("signin.societyNetWork", { name: "Facebook" }) }}</span
       >
       <p class="redirect-page">
         {{ $t("signin.changeForm") }}
@@ -47,15 +43,38 @@
 </template>
 
 <script>
-import { ref } from "@vue/reactivity";
+import { reactive } from "@vue/reactivity";
 export default {
   name: "SigninForm",
-  props: ["errorMessage"],
-  setup() {
-    const email = ref("");
-    const password = ref("");
+  props: {
+    errorMessage: {
+      type: String,
+    },
+  },
+  setup(props, { emit }) {
+    const loginData = reactive({
+      email: "",
+      password: "",
+    });
 
-    return { email, password };
+    const handleSigninWithEmailAndPassword = () => {
+      emit("signin", loginData);
+    };
+
+    const handleSigninWithGoogle = () => {
+      emit("signinWithGoogle");
+    };
+
+    const handleSigninWithFacebook = () => {
+      emit("signinWithFacebook");
+    };
+
+    return {
+      loginData,
+      handleSigninWithEmailAndPassword,
+      handleSigninWithGoogle,
+      handleSigninWithFacebook,
+    };
   },
 };
 </script>

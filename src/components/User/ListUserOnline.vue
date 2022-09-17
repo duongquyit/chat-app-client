@@ -111,8 +111,14 @@ import { listGroupsChatOfCurrentUser } from "@composables/GroupChat";
 
 export default {
   name: "ListUserOnline",
-  props: ["listUsersConnected", "currentUser"],
-  components: {},
+  props: {
+    listUsersConnected: {
+      type: Array,
+    },
+    currentUser: {
+      type: Object,
+    }
+  },
   setup(props, { emit }) {
     const userIdSelected = ref("");
     const groupIdSelected = ref("");

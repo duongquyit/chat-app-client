@@ -60,18 +60,18 @@ const leaveGroupChat = async (groupId, user) => {
     if (group.exists()) {
       if (group.data().creator.uid == user.uid) {
         await deleteDoc(groupRef);
-      } else {
-        const index = group.data().members.findIndex(({ uid }) => uid == user.uid);
-        const amountMember = group.data().members.splice(index, 1).length;
-        if (amountMember == 1) {
-          await deleteDoc(groupRef);
-        } else {
-          await updateDoc(groupRef, {
-            members: group.data().members.splice(index, 1),
-            membersId: group.data().membersId.splice(index, 1),
-          });
-        }
+        return;
       }
+      const index = group.data().members.findIndex(({ uid }) => uid == user.uid);
+      const amountMember = group.data().members.splice(index, 1).length;
+      if (amountMember == 1) {
+        await deleteDoc(groupRef);
+        return;
+      }
+      await updateDoc(groupRef, {
+        members: group.data().members.splice(index, 1),
+        membersId: group.data().membersId.splice(index, 1),
+      });
     }
   } catch (error) {
     console.log(error);
