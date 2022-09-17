@@ -1,0 +1,128 @@
+.signin-form-container {
+  width: 40%;
+  min-width: 400px;
+  max-height: 470px;
+  margin: 0 auto;
+  margin-top: 3em;
+  box-shadow: rgb(99 99 99 / 20%) 0px 2px 8px 0px;
+  border-radius: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0 4em;
+  padding-bottom: 0.5em;
+  align-content: baseline;
+}
+
+.signin-form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.signin-form h3 {
+  font-size: 1.5em;
+  color: #646363e6;
+  font-family: system-ui;
+  padding: 0.5em;
+  margin-top: 0.5em;
+  width: 100%;
+  letter-spacing: 2px;
+}
+
+.signin-form form {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0.5em 0;
+  position: relative;
+}
+
+.signin-form form input {
+  width: 100%;
+  padding: 0.5em 1em;
+  border-radius: 5px;
+  border: 1px solid #80808099;
+  margin: 0.5em 0em;
+  outline: none;
+  font-size: 1em;
+  font-family: system-ui;
+  color: #5e5d5df0;
+}
+
+.signin-error-message {
+  position: absolute;
+  bottom: 60px;
+  color: red;
+  font-size: 0.9em;
+  font-family: system-ui;
+}
+
+.signin-form form button {
+  margin: 1.5em auto 0.5em auto;
+  padding: 0.5em 1em;
+  font-size: 1em;
+  border-radius: 5px;
+  border: 1px solid #1558e978;
+  background: #0067e7eb;
+  color: white;
+  font-weight: 500;
+}
+
+.signin-form form button:hover {
+  background: #186bd1eb;
+}
+
+.or-change-method-signin {
+  width: 100%;
+  position: relative;
+  border-top: 1px solid gray;
+  margin: 1em 0;
+}
+
+.or-change-method-signin span {
+  transform: translateY(-12px);
+  display: block;
+  background: white;
+  width: 12%;
+  margin: 0 auto;
+  font-size: 0.9em;
+  font-family: system-ui;
+  font-weight: bold;
+}
+
+.signin-with-society-network {
+  width: 70%;
+  margin: 0.2em auto;
+  padding: 0.5em;
+  border-radius: 5px;
+  border: 1px solid #80808050;
+  font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+}
+
+.redirect-page {
+  font-size: 0.8em;
+  width: 100%;
+  padding: 0.5em;
+  margin-top: 2em;
+}
+
+.redirect-page a {
+  text-decoration: none;
+  color: rgb(0, 60, 255);
+}
+
+.icon-custom {
+  font-size: 1.2em;
+}
+
+.gg-login {
+  background: #ff2f2fe6;
+}
+
+.fb-login {
+  background: #0066ff;
+}

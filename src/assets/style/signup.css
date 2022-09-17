@@ -1,0 +1,74 @@
+.signup-form-container {
+  width: 40%;
+  min-width: 400px;
+  margin: 0 auto;
+}
+
+.siggup-form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  box-shadow: rgb(99 99 99 / 20%) 0px 2px 8px 0px;
+  margin: 3em 0em;
+  border-radius: 10px;
+  padding: 0 12%;
+  padding-bottom: 0.5em;
+}
+
+.siggup-form h3 {
+  font-size: 1.5em;
+  color: #646363e6;
+  font-family: system-ui;
+  padding: 0.5em;
+  margin-top: 0.5em;
+  width: 100%;
+  letter-spacing: 2px;
+}
+
+.siggup-form form {
+  display: flex;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.siggup-form form input {
+  width: 100%;
+  padding: 0.5em 1em;
+  border-radius: 5px;
+  border: 1px solid #80808099;
+  margin: 0.5em 0em;
+  outline: none;
+  font-size: 1em;
+  font-family: system-ui;
+  color: #5e5d5df0;
+}
+
+.signup-form-error-message {
+  position: absolute;
+  bottom: 45px;
+  font-size: 0.9em;
+  font-family: system-ui;
+  color: red;
+}
+
+.siggup-form form button {
+  margin: 1.5em auto 0 auto;
+  padding: 0.5em 1em;
+  color: white;
+  background: #0aa942;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+}
+
+.redirect-page {
+  font-size: 0.8em;
+  width: 100%;
+  padding: 0.5em;
+  margin-top: 2em;
+}
+
+.redirect-page a {
+  text-decoration: none;
+  color: rgb(0, 60, 255);
+}

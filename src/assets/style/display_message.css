@@ -1,0 +1,149 @@
+.chat-message-list-message {
+  width: 100%;
+  height: 90%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.chat-message-show-message {
+  width: 100%;
+  max-height: 100%;
+  padding: 0.5em;
+  overflow-y: auto;
+}
+
+.message {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.message:hover .messages-option {
+  display: flex;
+}
+
+.chat-message-receive,
+.chat-message-send {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  margin: 0.2em 0em;
+}
+
+.text-message {
+  display: flex;
+  max-width: 70%;
+  position: relative;
+}
+
+.tooltip-send,
+.tooltip-receive {
+  position: absolute;
+  background: #626262;
+  color: white;
+  padding: 0.5em;
+  border-radius: 3px;
+  font-size: 0.7em;
+  width: 130px;
+  visibility: hidden;
+}
+
+.tooltip-send {
+  left: -140px;
+}
+.tooltip-receive {
+  right: -140px;
+}
+
+.tooltip-send::after {
+  content: " ";
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  margin-top: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent transparent #626262;
+}
+
+.tooltip-receive::after {
+  content: " ";
+  position: absolute;
+  top: 50%;
+  left: -7.5%;
+  margin-top: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent #626262 transparent transparent;
+}
+
+.text-message:hover .message-tooltip {
+  visibility: visible;
+}
+
+.message-tooltip:hover {
+  visibility: hidden !important;
+}
+
+.chat-message-receive {
+  justify-content: flex-start;
+}
+
+.chat-message-send {
+  justify-content: flex-end;
+}
+
+.chat-message-receive img {
+  width: 2em;
+  height: 2em;
+  border-radius: 100px;
+  margin: 0 0.5em 0 0;
+}
+
+.text-message-receive,
+.text-message-send {
+  padding: 0.5em 0.7em;
+  border-radius: 20px;
+  font-size: 0.95em;
+  font-family: system-ui;
+  text-align: left;
+}
+
+.text-message-receive {
+  background: #e4e6eb;
+  color: black;
+}
+
+.text-message-send {
+  background: #0084ff;
+  color: white;
+}
+
+.messages-option {
+  display: flex;
+  align-items: center;
+  margin: 0em 0.7em;
+  position: relative;
+  display: none;
+}
+
+#message-emotion span,
+#message-option span {
+  background: none;
+  color: #80808085;
+  padding: 0.2em 0.3em;
+  font-size: 1.1em;
+  margin-left: 0.3em;
+  border-radius: 50%;
+  width: 1.5em;
+  height: 1.5em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#message-emotion span:hover,
+#message-option span:hover {
+  background: #80808024;
+}
