@@ -125,7 +125,14 @@ import ListAllIconMessageReaction from "@components/Chat/ListAllIconMessageReact
 
 export default {
   name: "DisplayMessage",
-  props: ["messages", "currentUser"],
+  props: {
+    messages: {
+      type: Array,
+    },
+    currentUser: {
+      type: Object,
+    },
+  },
   components: {
     MessageOption,
     ListIconMessageReaction,
@@ -200,11 +207,11 @@ export default {
         isShowMessageOption.value = true;
         isShowListIcon.value = true;
         indexMessageReaction.value = index;
-      } else {
-        isShowMessageOption.value = false;
-        isShowListIcon.value = false;
-        indexMessageReaction.value = null;
+        return;
       }
+      isShowMessageOption.value = false;
+      isShowListIcon.value = false;
+      indexMessageReaction.value = null;
     };
 
     // watch change of messages

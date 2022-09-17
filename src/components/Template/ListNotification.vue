@@ -30,7 +30,14 @@
 import { timeSince } from "@composables/TimeFormart";
 export default {
   name: "ListNotification",
-  props: ["isDarkMode", "notification"],
+  props: {
+    isDarkMode: {
+      type: Boolean,
+    },
+    notification: {
+      type: Array,
+    }
+  },
   setup(props, { emit }) {
     const handleClickNotificationItem = (notiId) => {
       emit("updateSeenStatus", notiId);

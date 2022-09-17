@@ -171,38 +171,38 @@ const handleMessageReaction = async (docRef, { iconReaction, userReaction }) => 
         user: userReaction,
       }]
     });
-  } else {
-    // index of reaction into message
-    const index = doc.data().reaction.findIndex(({ user }) => user.uid == userReaction.uid);
-    if (index != -1) {
-      const { icon } = doc.data().reaction[index];
-      const updateData = [...doc.data().reaction];
-      // remove icon if icon like current icon reaction
-      if (icon == iconReaction) {
-        updateData.splice(index, 1);
-        await updateDoc(docRef, {
-          reaction: updateData,
-        });
-      } else {
-        // change icon
-        updateData[index].icon = iconReaction;
-        await updateDoc(docRef, {
-          reaction: updateData,
-        });
-      }
-    } else {
-      // add reaction when user not exist in reaction list
-      await updateDoc(docRef, {
-        reaction: [
-          ...doc.data().reaction,
-          {
-            icon: iconReaction,
-            user: userReaction,
-          }
-        ]
-      });
-    }
+    return;
   }
+  // index of reaction into message
+  const index = doc.data().reaction.findIndex(({ user }) => user.uid == userReaction.uid);
+  if (index != -1) {
+    const { icon } = doc.data().reaction[index];
+    const updateData = [...doc.data().reaction];
+    // remove icon if icon like current icon reaction
+    if (icon == iconReaction) {
+      updateData.splice(index, 1);
+      await updateDoc(docRef, {
+        reaction: updateData,
+      });
+      return;
+    }
+    // change icon
+    updateData[index].icon = iconReaction;
+    await updateDoc(docRef, {
+      reaction: updateData,
+    });
+    return;
+  }
+  // add reaction when user not exist in reaction list
+  await updateDoc(docRef, {
+    reaction: [
+      ...doc.data().reaction,
+      {
+        icon: iconReaction,
+        user: userReaction,
+      }
+    ]
+  });
 }
 
 const messageReaction = async ({ chatType, messageId, iconReaction, userReaction, chatPrivateId }) => {
@@ -213,13 +213,13 @@ const messageReaction = async ({ chatType, messageId, iconReaction, userReaction
     } catch (error) {
       console.log(error);
     }
-  } else {
-    const messageDocRef = doc(db, 'private-messages', 'rooms', chatPrivateId, messageId);
-    try {
-      await handleMessageReaction(messageDocRef, { iconReaction, userReaction });
-    } catch (error) {
-      console.log(error);
-    }
+    return;
+  }
+  const messageDocRef = doc(db, 'private-messages', 'rooms', chatPrivateId, messageId);
+  try {
+    await handleMessageReaction(messageDocRef, { iconReaction, userReaction });
+  } catch (error) {
+    console.log(error);
   }
 }
 
