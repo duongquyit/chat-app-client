@@ -30,6 +30,10 @@ const createPublicChatMessage = async (message, sender) => {
 }
 
 const getPublicChatMessage = () => {
+  const messageItem = {
+    sender: {},
+    messages: [],
+  }
   console.log('get public chat');
   // query get message sort by created at and limit 50 message
   const q = query(messagesRef, where('isPublicMessage', '==', true), orderBy('createdAt', 'desc'), limit(50));
@@ -44,7 +48,33 @@ const getPublicChatMessage = () => {
       }
     });
     publicMessages.reverse();
-    messages.value.set('public-messages', publicMessages);
+    const newMessages = [];
+    publicMessages.forEach((messageData) => {
+      const { sender } = messageData;
+      const data = {
+        chatType: messageData.chatType,
+        messageId: messageData.messageId,
+        message: messageData.message,
+        reaction: messageData.reaction,
+        isPublicMessage: messageData.isPublicMessage,
+        createdAt: messageData.createdAt,
+      };
+      if (!messageItem.sender.uid) {
+        messageItem.sender = { ...sender };
+        messageItem.messages.push(data);
+      } else {
+        if (messageItem.sender.uid == sender.uid) {
+          messageItem.messages.push(data);
+        } else {
+          newMessages.push({ ...messageItem });
+          messageItem.sender = { ...sender };
+          messageItem.messages = [];
+          messageItem.messages.push(data);
+        }
+      }
+    })
+    newMessages.push({ ...messageItem });
+    messages.value.set('public-messages', newMessages);
   });
 }
 

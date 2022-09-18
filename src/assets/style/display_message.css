@@ -16,10 +16,9 @@
 .message {
   width: 100%;
   display: flex;
-  flex-wrap: wrap;
 }
 
-.message:hover .messages-option {
+.text-message:hover .messages-option {
   display: flex;
 }
 
@@ -27,13 +26,23 @@
 .chat-message-send {
   width: 100%;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  margin: 0.2em 0em;
+}
+
+.message-text-wrapper {
+  margin-top: 0.5em;
+  width: 65%;
 }
 
 .text-message {
   display: flex;
-  max-width: 70%;
+  max-width: 100%;
+  position: relative;
+}
+
+.text {
+  display: flex;
   position: relative;
 }
 
@@ -47,6 +56,7 @@
   font-size: 0.7em;
   width: 130px;
   visibility: hidden;
+  z-index: 2;
 }
 
 .tooltip-send {
@@ -78,9 +88,9 @@
   border-color: transparent #626262 transparent transparent;
 }
 
-.text-message:hover .message-tooltip {
+/* .text:hover .message-tooltip {
   visibility: visible;
-}
+} */
 
 .message-tooltip:hover {
   visibility: hidden !important;
@@ -88,6 +98,7 @@
 
 .chat-message-receive {
   justify-content: flex-start;
+  align-items: flex-end;
 }
 
 .chat-message-send {
@@ -104,7 +115,6 @@
 .text-message-receive,
 .text-message-send {
   padding: 0.5em 0.7em;
-  border-radius: 20px;
   font-size: 0.95em;
   font-family: system-ui;
   text-align: left;
@@ -113,6 +123,8 @@
 .text-message-receive {
   background: #e4e6eb;
   color: black;
+  border-radius: 5px 20px 20px 5px;
+  margin: 0.5px;
 }
 
 .text-message-send {
@@ -146,4 +158,27 @@
 #message-emotion span:hover,
 #message-option span:hover {
   background: #80808024;
+}
+
+.list-reaction {
+  position: absolute;
+  display: flex;
+  bottom: -12px;
+  z-index: 1;
+  font-size: 0.8em;
+  left: 100%;
+  transform: translateX(-20px);
+  padding: 0.1em 0.1em;
+  background: white;
+  border-radius: 20px;
+  box-shadow: rgb(0 0 0 / 16%) 0px 1px 4px;
+}
+
+.text-message-receive:hover + .message-tooltip {
+  visibility: visible !important;
+}
+
+
+.message-send-item {
+  justify-content: flex-end;
 }

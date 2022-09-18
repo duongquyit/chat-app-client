@@ -1,10 +1,14 @@
 <template>
   <div class="chat-message-list-message">
     <div class="chat-message-show-message" ref="chatScrollBar">
-      <div class="message" v-for="(message, index) in messages" :key="index">
+      <div
+        class="message"
+        v-for="(messageData, index) in messages"
+        :key="index"
+      >
         <div
           class="chat-message-send"
-          v-if="message.sender.uid == currentUser?.uid"
+          v-if="messageData.sender.uid == currentUser?.uid"
         >
           <MessageOption
             :messageSend="true"
@@ -18,10 +22,10 @@
                 v-if="!isShowAllIcon && indexMessageReaction == index"
                 :isSendMessage="true"
                 :message="{
-                  chatType: message.chatType,
-                  messageId: message.messageId,
-                  reaction: message.reaction,
-                  chatPrivateId: message.chatPrivateId,
+                  chatType: messageData.chatType,
+                  messageId: messageData.messageId,
+                  reaction: messageData.reaction,
+                  chatPrivateId: messageData.chatPrivateId,
                 }"
                 @reactionMessage="handleReactionMessage"
                 @showAllIcon="handleShowAllIcon"
@@ -29,80 +33,98 @@
               <ListAllIconMessageReaction
                 v-if="isShowAllIcon && index == indexMessageReaction"
                 :message="{
-                  chatType: message.chatType,
-                  messageId: message.messageId,
-                  reaction: message.reaction,
-                  chatPrivateId: message.chatPrivateId,
+                  chatType: messageData.chatType,
+                  messageId: messageData.messageId,
+                  reaction: messageData.reaction,
+                  chatPrivateId: messageData.chatPrivateId,
                 }"
                 @reactionMessage="handleReactionMessage"
               />
             </template>
           </MessageOption>
-
-          <div class="text-message">
-            <span class="text-message-send" v-html="message.message"> </span>
-            <div class="message-tooltip tooltip-send" v-if="message?.createdAt">
-              {{ $d(message?.createdAt?.toDate(), "long") }}
-            </div>
-            <div class="list-reaction" v-show="message?.reaction?.length">
-              <span
-                v-for="icon in message.reaction"
-                :key="icon"
-                v-html="icon.icon"
-              ></span>
+          <div class="message-text-wrapper">
+            <div
+              class="text-message message-send-item"
+              v-for="message in messageData.messages"
+              :key="message.messageId"
+            >
+              <span class="text-message-send" v-html="message.message"> </span>
+              <div
+                class="message-tooltip tooltip-send"
+                v-if="messageData?.createdAt"
+              >
+                {{ $d(messageData?.createdAt?.toDate(), "long") }}
+              </div>
+              <div class="list-reaction" v-show="messageData?.reaction?.length">
+                <span
+                  v-for="icon in messageData.reaction"
+                  :key="icon"
+                  v-html="icon.icon"
+                ></span>
+              </div>
             </div>
           </div>
         </div>
+        <!-- message receive -->
         <div class="chat-message-receive" v-else>
-          <img :src="message.sender.photoURL" alt="" />
-          <div class="text-message">
-            <span class="text-message-receive" v-html="message.message"> </span>
+          <img :src="messageData.sender.photoURL" alt="" />
+          <div class="message-text-wrapper">
             <div
-              class="message-tooltip tooltip-receive"
-              v-if="message?.createdAt"
+              class="text-message"
+              v-for="(message, index) in messageData.messages"
+              :key="message.messageId"
             >
-              {{ $d(message?.createdAt?.toDate(), "long") }}
-            </div>
-            <div class="list-reaction" v-show="message?.reaction?.length">
-              <span
-                v-for="icon in message.reaction"
-                :key="icon"
-                v-html="icon.icon"
-              ></span>
+              <div class="text">
+                <span class="text-message-receive" v-html="message.message">
+                </span>
+                <div
+                  class="message-tooltip tooltip-receive"
+                  v-if="message?.createdAt"
+                >
+                  {{ $d(message?.createdAt?.toDate(), "long") }}
+                </div>
+                <div class="list-reaction" v-if="message.reaction?.length">
+                  <span
+                    v-for="icon in message.reaction"
+                    :key="icon"
+                    v-html="icon.icon"
+                  ></span>
+                </div>
+              </div>
+              <MessageOption
+                :messageSend="false"
+                :isShowMessageOption="isShowMessageOption"
+                :index="index"
+                :indexMessageReaction="indexMessageReaction"
+                @clickIconOption="handleShowListIcon(index)"
+              >
+                <template v-slot:listIcon>
+                  <ListIconMessageReaction
+                    v-if="indexMessageReaction == index && !isShowAllIcon"
+                    :isSendMessage="false"
+                    :message="{
+                      chatType: message.chatType,
+                      messageId: message.messageId,
+                      reaction: message.reaction,
+                      chatPrivateId: message.chatPrivateId,
+                    }"
+                    @reactionMessage="handleReactionMessage"
+                    @showAllIcon="handleShowAllIcon"
+                  />
+                  <ListAllIconMessageReaction
+                    v-if="indexMessageReaction == index && isShowAllIcon"
+                    :message="{
+                      chatType: message.chatType,
+                      messageId: message.messageId,
+                      reaction: message.reaction,
+                      chatPrivateId: message.chatPrivateId,
+                    }"
+                    @reactionMessage="handleReactionMessage"
+                  />
+                </template>
+              </MessageOption>
             </div>
           </div>
-          <MessageOption
-            :messageSend="false"
-            :isShowMessageOption="isShowMessageOption"
-            :index="index"
-            :indexMessageReaction="indexMessageReaction"
-            @clickIconOption="handleShowListIcon(index)"
-          >
-            <template v-slot:listIcon>
-              <ListIconMessageReaction
-                v-if="indexMessageReaction == index && !isShowAllIcon"
-                :isSendMessage="false"
-                :message="{
-                  chatType: message.chatType,
-                  messageId: message.messageId,
-                  reaction: message.reaction,
-                  chatPrivateId: message.chatPrivateId,
-                }"
-                @reactionMessage="handleReactionMessage"
-                @showAllIcon="handleShowAllIcon"
-              />
-              <ListAllIconMessageReaction
-                v-if="indexMessageReaction == index && isShowAllIcon"
-                :message="{
-                  chatType: message.chatType,
-                  messageId: message.messageId,
-                  reaction: message.reaction,
-                  chatPrivateId: message.chatPrivateId,
-                }"
-                @reactionMessage="handleReactionMessage"
-              />
-            </template>
-          </MessageOption>
         </div>
       </div>
     </div>
@@ -200,6 +222,7 @@ export default {
     };
 
     const handleShowListIcon = (index) => {
+      console.log(index);
       isShowAllIcon.value = false;
       count.value = 0;
       document.removeEventListener("click", clickOutsideAllIcon);
