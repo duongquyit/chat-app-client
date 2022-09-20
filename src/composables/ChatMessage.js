@@ -9,6 +9,41 @@ const PUBLIC_KEY = 'PUBLIC';
 const GROUP_KEY = 'GROUP';
 const PRIVATE_KEY = 'PRIVATE';
 
+const messagesResult = (listMessages) => {
+  const messageItem = {
+    sender: {},
+    messages: [],
+  }
+  const result = [];
+  listMessages.forEach(item => {
+    const { sender } = item;
+    const data = {
+      chatType: item.chatType,
+      messageId: item.messageId,
+      message: item.message,
+      reaction: item.reaction,
+      isPublicMessage: item.isPublicMessage,
+      createdAt: item.createdAt,
+      ...item.chatPrivateId && { chatPrivateId: item.chatPrivateId }
+    };
+    if (!messageItem.sender.uid) {
+      messageItem.sender = { ...sender };
+      messageItem.messages.push(data);
+    } else {
+      if (messageItem.sender.uid == sender.uid) {
+        messageItem.messages.push(data);
+      } else {
+        result.push({ ...messageItem });
+        messageItem.sender = { ...sender };
+        messageItem.messages = [];
+        messageItem.messages.push(data);
+      }
+    }
+  });
+  result.push({ ...messageItem })
+  return result;
+}
+
 // PUBLIC CHAT
 // collection for public message
 const messagesRef = collection(db, 'messages');
@@ -30,10 +65,6 @@ const createPublicChatMessage = async (message, sender) => {
 }
 
 const getPublicChatMessage = () => {
-  const messageItem = {
-    sender: {},
-    messages: [],
-  }
   console.log('get public chat');
   // query get message sort by created at and limit 50 message
   const q = query(messagesRef, where('isPublicMessage', '==', true), orderBy('createdAt', 'desc'), limit(50));
@@ -48,33 +79,7 @@ const getPublicChatMessage = () => {
       }
     });
     publicMessages.reverse();
-    const newMessages = [];
-    publicMessages.forEach((messageData) => {
-      const { sender } = messageData;
-      const data = {
-        chatType: messageData.chatType,
-        messageId: messageData.messageId,
-        message: messageData.message,
-        reaction: messageData.reaction,
-        isPublicMessage: messageData.isPublicMessage,
-        createdAt: messageData.createdAt,
-      };
-      if (!messageItem.sender.uid) {
-        messageItem.sender = { ...sender };
-        messageItem.messages.push(data);
-      } else {
-        if (messageItem.sender.uid == sender.uid) {
-          messageItem.messages.push(data);
-        } else {
-          newMessages.push({ ...messageItem });
-          messageItem.sender = { ...sender };
-          messageItem.messages = [];
-          messageItem.messages.push(data);
-        }
-      }
-    })
-    newMessages.push({ ...messageItem });
-    messages.value.set('public-messages', newMessages);
+    messages.value.set('public-messages', messagesResult(publicMessages));
   });
 }
 
@@ -94,7 +99,7 @@ const getGroupChatMessage = (groupChatId) => {
         }
       });
       groupMessages.reverse();
-      messages.value.set(groupChatId, groupMessages);
+      messages.value.set(groupChatId, messagesResult(groupMessages));
     });
   } catch (error) {
     console.log(error);
@@ -170,7 +175,9 @@ const getPrivateChatMessage = async (chatPrivateId) => {
           chatPrivateId,
         }
       });
-      messages.value.set(privateMessagesRef._path.segments[2], privateMessages);
+      privateMessages.reverse();
+      messages.value.set(privateMessagesRef._path.segments[2], messagesResult(privateMessages));
+      console.log(messages.value.get(privateMessagesRef._path.segments[2]));
     })
   } catch (error) {
     console.log(error);

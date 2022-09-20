@@ -106,6 +106,6 @@ export default {
 }
 
 .receiveMessageListIconReaction {
-  left: -100%;
+  left: -75%;
 }
 </style>
