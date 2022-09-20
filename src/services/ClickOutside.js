@@ -1,13 +1,12 @@
 const clickOutsideListEmotion = (data) => {
-  const { event, elementOne, count, elementTwo, isShowListIcon, isShowOption, messageIndex, callback } = data;
+  const { event, elementOne, count, elementTwo, isShowListIcon, currentMessageId, callback } = data;
   const listAllIcon = document.querySelector(`${elementOne}`);
-  const messagesOption = document.querySelectorAll(`${elementTwo}`);
   if (!listAllIcon?.contains(event.target) &&
-    !messagesOption[messageIndex.value]?.contains(event.target) &&
+    !elementTwo?.contains(event.target) &&
     count.value - 1) {
+    console.log('running here');
     isShowListIcon.value = false;
-    isShowOption.value = false;
-    messageIndex.value = null;
+    currentMessageId.value = '';
     count.value = 0;
     document.removeEventListener('click', callback);
   }
