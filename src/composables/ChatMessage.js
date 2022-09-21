@@ -9,6 +9,8 @@ const PUBLIC_KEY = 'PUBLIC';
 const GROUP_KEY = 'GROUP';
 const PRIVATE_KEY = 'PRIVATE';
 
+const amountMessages = ref(0);
+
 const messagesResult = (listMessages) => {
   const messageItem = {
     sender: {},
@@ -78,6 +80,7 @@ const getPublicChatMessage = () => {
         chatType: PUBLIC_KEY,
       }
     });
+    amountMessages.value = publicMessages.length;
     publicMessages.reverse();
     messages.value.set('public-messages', messagesResult(publicMessages));
   });
@@ -99,6 +102,7 @@ const getGroupChatMessage = (groupChatId) => {
         }
       });
       groupMessages.reverse();
+      amountMessages.value = groupMessages.length;
       messages.value.set(groupChatId, messagesResult(groupMessages));
     });
   } catch (error) {
@@ -176,8 +180,8 @@ const getPrivateChatMessage = async (chatPrivateId) => {
         }
       });
       privateMessages.reverse();
+      amountMessages.value = privateMessages.length;
       messages.value.set(privateMessagesRef._path.segments[2], messagesResult(privateMessages));
-      console.log(messages.value.get(privateMessagesRef._path.segments[2]));
     })
   } catch (error) {
     console.log(error);
@@ -262,6 +266,7 @@ const messageReaction = async ({ chatType, messageId, iconReaction, userReaction
 
 export {
   messages,
+  amountMessages,
   createPublicChatMessage,
   getPublicChatMessage,
   createPrivateChatMessage,

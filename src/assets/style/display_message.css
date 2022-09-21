@@ -177,7 +177,7 @@
   visibility: visible !important;
 }
 
-.text-message-send:hover + .message-tooltip {
+.text:hover .message-tooltip {
   visibility: visible !important;
 }
 

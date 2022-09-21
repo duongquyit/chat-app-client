@@ -114,11 +114,8 @@
                   v-html="message.message"
                 >
                 </span>
-                <div
-                  class="message-tooltip tooltip-receive"
-                  v-if="message?.createdAt"
-                >
-                  {{ $d(message?.createdAt?.toDate(), "long") }}
+                <div class="message-tooltip tooltip-receive">
+                  {{ $d(message.createdAt?.toDate(), "long") }}
                 </div>
                 <div class="list-reaction" v-if="message.reaction?.length">
                   <span
@@ -151,7 +148,7 @@
                     @showAllIcon="handleShowAllIcon"
                   />
                   <ListAllIconMessageReaction
-                    v-if="
+                    v-else-if="
                       message.messageId == currentMessageId && isShowAllIcon
                     "
                     :message="{
@@ -179,7 +176,7 @@ import { ref } from "@vue/reactivity";
 import { nextTick, onMounted, watch } from "@vue/runtime-core";
 
 import { isDarkMode } from "@composables/GlobalVariables";
-import { messageReaction } from "@composables/ChatMessage";
+import { messageReaction, amountMessages } from "@composables/ChatMessage";
 import { clickOutsideListEmotion } from "../../services/ClickOutside";
 
 import MessageOption from "@components/Chat/MessageOption.vue";
@@ -287,14 +284,11 @@ export default {
     };
 
     // watch change of messages
-    watch(
-      () => props.messages,
-      async () => {
-        // await DOM updated then scroll bar to bottom
-        await nextTick();
-        chatScrollBar.value.scrollTop = chatScrollBar.value.scrollHeight;
-      }
-    );
+    watch(amountMessages, async () => {
+      // await DOM updated then scroll bar to bottom
+      await nextTick();
+      chatScrollBar.value.scrollTop = chatScrollBar.value.scrollHeight;
+    });
 
     watch(isShowListIcon, () => {
       if (isShowListIcon.value) {
