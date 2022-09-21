@@ -13,7 +13,7 @@ const routes = [
     component: () => import('@/views/Signup.vue'),
   },
   {
-    path: '/chat',
+    path: '/chat/:id',
     name: 'chat',
     component: () => import('@/views/Chat.vue'),
     meta: {

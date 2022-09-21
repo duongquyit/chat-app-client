@@ -90,7 +90,11 @@
         </div>
         <!-- message receive -->
         <div class="chat-message-receive" v-else>
-          <img :src="messageData.sender.photoURL" alt="" />
+          <img
+            v-show="messageData.sender.photoURL"
+            :src="messageData.sender.photoURL"
+            alt=""
+          />
           <div class="message-text-wrapper">
             <div
               class="text-message message-receive-item"

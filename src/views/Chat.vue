@@ -214,7 +214,6 @@ export default {
 
     const handleSelectGroupChat = (group) => {
       chatMessagesKey.value = group.groupChatId;
-      //
       roomChatInfor.name = group.groupChatName;
       roomChatInfor.image = group.groupChatPhotoURL;
       isChatPrivate.value = true;
@@ -226,18 +225,18 @@ export default {
     };
 
     const isShowEditGroupChatForm = ref(false);
-    const groupInformation = ref({});
+    let groupInformation = reactive({});
     const handleGetGroupInformation = (group) => {
-      groupInformation.value = group;
+      groupInformation = { ...group };
       isShowEditGroupChatForm.value = true;
     };
 
     const handleUpdateGroupChatName = (newGroupChatName) => {
       updateGroupChat({
-        groupChatId: groupInformation.value.groupChatId,
+        groupChatId: groupInformation.groupChatId,
         groupChatName: newGroupChatName,
-        groupChatPhotoURL: groupInformation.value.groupChatPhotoURL,
-        members: groupInformation.value.members,
+        groupChatPhotoURL: groupInformation.groupChatPhotoURL,
+        members: groupInformation.members,
       });
     };
 
@@ -255,12 +254,10 @@ export default {
         if (evt.key === "Enter" && evt.target.innerHTML.trim()) {
           // send chat public
           if (!isChatPrivate.value) {
-            console.log("chat public");
             createPublicChatMessage(evt.target.innerHTML.trim(), currentUser);
           } else {
             // send chat group
             if (isChatGroup.value) {
-              console.log("chat group");
               createGroupChatMessage(
                 groupChatId.value,
                 evt.target.innerHTML.trim(),
@@ -268,7 +265,6 @@ export default {
               );
             } else {
               // send chat private
-              console.log("chat private");
               createPrivateChatMessage(
                 evt.target.innerHTML.trim(),
                 currentUser,

@@ -105,6 +105,7 @@
 
 <script>
 import { ref } from "@vue/reactivity";
+import { useRouter } from "vue-router";
 
 import { isDarkMode } from "@composables/GlobalVariables";
 import { listGroupsChatOfCurrentUser } from "@composables/GroupChat";
@@ -117,9 +118,11 @@ export default {
     },
     currentUser: {
       type: Object,
-    }
+    },
   },
   setup(props, { emit }) {
+    const router = useRouter();
+
     const userIdSelected = ref("");
     const groupIdSelected = ref("");
     const isShowGroupsChat = ref(false);
@@ -127,6 +130,7 @@ export default {
     const isShowGroupChatSelection = ref(false);
 
     const handleClickPublicChat = () => {
+      router.push({ name: "chat", params: { id: "public-message" } });
       emit("selectWorldChat");
       userIdSelected.value = "";
       groupIdSelected.value = "";
@@ -141,6 +145,7 @@ export default {
     };
 
     const handleClickSelectGroupChat = (group) => {
+      router.push({ name: "chat", params: { id: group.groupChatId } });
       emit("selectGroupChat", group);
       groupIdSelected.value = group.groupChatId;
     };
@@ -159,6 +164,7 @@ export default {
     };
 
     const handleClickSelectUser = (user) => {
+      router.push({ name: "chat", params: { id: user.uid } });
       emit("selectUser", user);
       userIdSelected.value = user?.uid;
       groupIdSelected.value = "";

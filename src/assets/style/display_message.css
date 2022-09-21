@@ -32,7 +32,7 @@
 
 .message-text-wrapper {
   margin-top: 0.5em;
-  width: 65%;
+  width: calc(100% - 2em - 50px);
 }
 
 .text-message {
@@ -45,6 +45,7 @@
   display: flex;
   position: relative;
   margin: 0em 0.3em;
+  max-width: calc(72% - 0.7em);
 }
 
 .tooltip-send,
@@ -118,6 +119,7 @@
   font-size: 0.95em;
   font-family: system-ui;
   text-align: left;
+  word-break: break-word;
 }
 
 .text-message-receive {

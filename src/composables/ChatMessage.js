@@ -12,6 +12,7 @@ const PRIVATE_KEY = 'PRIVATE';
 const amountMessages = ref(0);
 
 const messagesResult = (listMessages) => {
+  listMessages.reverse();
   const messageItem = {
     sender: {},
     messages: [],
@@ -81,7 +82,6 @@ const getPublicChatMessage = () => {
       }
     });
     amountMessages.value = publicMessages.length;
-    publicMessages.reverse();
     messages.value.set('public-messages', messagesResult(publicMessages));
   });
 }
@@ -101,7 +101,6 @@ const getGroupChatMessage = (groupChatId) => {
           chatType: GROUP_KEY,
         }
       });
-      groupMessages.reverse();
       amountMessages.value = groupMessages.length;
       messages.value.set(groupChatId, messagesResult(groupMessages));
     });
@@ -168,7 +167,7 @@ const getPrivateChatMessage = async (chatPrivateId) => {
     const privateMessagesRef = collection(db, 'private-messages', 'rooms', `${chatPrivateId}`);
     const q = query(
       privateMessagesRef,
-      orderBy("createdAt"),
+      orderBy("createdAt", 'desc'),
       limit(50));
     onSnapshot(q, querySnapshot => {
       const privateMessages = querySnapshot.docs.map(item => {
@@ -179,7 +178,6 @@ const getPrivateChatMessage = async (chatPrivateId) => {
           chatPrivateId,
         }
       });
-      privateMessages.reverse();
       amountMessages.value = privateMessages.length;
       messages.value.set(privateMessagesRef._path.segments[2], messagesResult(privateMessages));
     })
