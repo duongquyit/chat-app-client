@@ -5,7 +5,7 @@
   >
     <div
       class="public-chat"
-      :class="{ isSelected: !userIdSelected && !groupIdSelected }"
+      :class="{ isSelected: (itemSelected = 'public-messages') }"
       @click="handleClickPublicChat"
     >
       <span>{{ $t("message.chatType.public") }}</span>
@@ -41,7 +41,7 @@
         <div
           class="group-chat-message-body-item"
           v-else
-          :class="{ isSelected: groupIdSelected == group.groupChatId }"
+          :class="{ isSelected: itemSelected == group.groupChatId }"
           v-for="group in listGroupsChatOfCurrentUser"
           :key="group"
           @click="handleClickSelectGroupChat(group)"
@@ -81,7 +81,7 @@
     <div class="list-user">
       <div
         class="user-connected-information"
-        :class="{ isSelected: userIdSelected == user?.uid && !groupIdSelected }"
+        :class="{ isSelected: itemSelected == user?.uid }"
         v-for="user in listUsersConnected"
         :key="user.socket"
         draggable="true"
@@ -105,10 +105,10 @@
 
 <script>
 import { ref } from "@vue/reactivity";
-import { useRouter } from "vue-router";
 
 import { isDarkMode } from "@composables/GlobalVariables";
 import { listGroupsChatOfCurrentUser } from "@composables/GroupChat";
+import { useRoute } from "vue-router";
 
 export default {
   name: "ListUserOnline",
@@ -121,19 +121,16 @@ export default {
     },
   },
   setup(props, { emit }) {
-    const router = useRouter();
-
-    const userIdSelected = ref("");
-    const groupIdSelected = ref("");
+    const route = useRoute();
     const isShowGroupsChat = ref(false);
+
+    const itemSelected = ref(route.params.id);
 
     const isShowGroupChatSelection = ref(false);
 
     const handleClickPublicChat = () => {
-      router.push({ name: "chat", params: { id: "public-message" } });
       emit("selectWorldChat");
-      userIdSelected.value = "";
-      groupIdSelected.value = "";
+      itemSelected.value = 'public-messages';
     };
 
     const handleClickGroupChat = () => {
@@ -145,9 +142,8 @@ export default {
     };
 
     const handleClickSelectGroupChat = (group) => {
-      router.push({ name: "chat", params: { id: group.groupChatId } });
       emit("selectGroupChat", group);
-      groupIdSelected.value = group.groupChatId;
+      itemSelected.value = group.groupChatId;
     };
 
     const handleClickGroupSelection = () => {
@@ -164,10 +160,8 @@ export default {
     };
 
     const handleClickSelectUser = (user) => {
-      router.push({ name: "chat", params: { id: user.uid } });
       emit("selectUser", user);
-      userIdSelected.value = user?.uid;
-      groupIdSelected.value = "";
+      itemSelected.value = user.uid;
     };
 
     const handleDragStart = (event, user) => {
@@ -175,11 +169,10 @@ export default {
     };
 
     return {
-      userIdSelected,
+      itemSelected,
       isDarkMode,
       isShowGroupsChat,
       listGroupsChatOfCurrentUser,
-      groupIdSelected,
       isShowGroupChatSelection,
       handleClickPublicChat,
       handleClickGroupChat,

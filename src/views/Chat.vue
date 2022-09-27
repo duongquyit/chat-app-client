@@ -86,6 +86,7 @@ import { useI18n } from "vue-i18n";
 
 import {
   messages,
+  initChatMessage,
   createPublicChatMessage,
   createPrivateChatMessage,
   getPublicChatMessage,
@@ -124,6 +125,7 @@ import Navbar from "@components/Template/Navbar.vue";
 import SendChatMessageForm from "@components/Chat/SendChatMessageForm.vue";
 import Emotion from "@components/Template/Emotion.vue";
 import GroupChatForm from "@components/Group/GroupChatFrom.vue";
+import { useRoute, useRouter } from "vue-router";
 
 export default {
   name: "ChatPage",
@@ -140,15 +142,19 @@ export default {
   },
   setup() {
     const { t } = useI18n();
+    const route = useRoute();
+    const router = useRouter();
 
     const listUsersConnected = ref([]);
+
+    const publicMessages = "public-messages";
 
     // chat type
     const isChatPrivate = ref(false);
     const isChatGroup = ref(false);
 
     // define key for type chat and room chat
-    const chatMessagesKey = ref("public-messages");
+    const chatMessagesKey = ref("");
 
     // HANDLE SELECT CHAT PRIVATE OR PUBLIC
     // select chat with other user online or chat world
@@ -157,14 +163,40 @@ export default {
       image: "",
     });
 
+    const changeRoomChatInfor = (name, image) => {
+      roomChatInfor.name = name;
+      roomChatInfor.image = image;
+    };
+
+    const init = async () => {
+      const { id } = route.params;
+      if (id === publicMessages) {
+        chatMessagesKey.value = publicMessages;
+        getPublicChatMessage();
+        changeRoomChatInfor(`${t("message.chatType.public")}`, "");
+        return;
+      }
+      const res = await initChatMessage(id, currentUser.uid);
+      if (res.isGroupChat) {
+        getGroupChatMessage(id);
+        chatMessagesKey.value = id;
+      } else {
+        getPrivateChatMessage(res.privateChatRoomId);
+        chatMessagesKey.value = res.privateChatRoomId;
+      }
+      changeRoomChatInfor(res.name, res.photoURL);
+    };
+    init();
+
     const userIsSelected = ref({});
     const handleSelectUser = async (user) => {
-      roomChatInfor.name = user.displayName;
-      roomChatInfor.image = user.photoURL;
+      const key = user.uid;
+      router.replace({ name: "chat", params: { id: key } });
+      changeRoomChatInfor(user.displayName, user.photoURL);
       // get user is select to chat private
       userIsSelected.value = user;
       // get message private between user and other user
-      const chatPrivate = await getPrivateChatId(currentUser.uid, user.uid);
+      const chatPrivate = await getPrivateChatId(currentUser.uid, key);
       chatMessagesKey.value = chatPrivate;
       getPrivateChatMessage(chatPrivate);
       // set status chat
@@ -174,10 +206,10 @@ export default {
     };
 
     const handleSelectPublicChat = () => {
-      chatMessagesKey.value = "public-messages";
+      router.replace({ name: "chat", params: { id: publicMessages } });
+      chatMessagesKey.value = publicMessages;
       // change message header
-      roomChatInfor.name = `${t("message.chatType.public")}`;
-      roomChatInfor.image = "";
+      changeRoomChatInfor(`${t("message.chatType.public")}`, "");
       // get world message
       getPublicChatMessage();
       // set status chat
@@ -213,9 +245,10 @@ export default {
     };
 
     const handleSelectGroupChat = (group) => {
-      chatMessagesKey.value = group.groupChatId;
-      roomChatInfor.name = group.groupChatName;
-      roomChatInfor.image = group.groupChatPhotoURL;
+      const key = group.groupChatId;
+      router.replace({ name: "chat", params: { id: key } });
+      chatMessagesKey.value = key;
+      changeRoomChatInfor(group.groupChatName, group.groupChatPhotoURL);
       isChatPrivate.value = true;
       isChatGroup.value = true;
       groupChatId.value = group.groupChatId;
@@ -350,7 +383,6 @@ export default {
     // SOCKET HANDLE -------------------------------------------------------------------------------
     onMounted(() => {
       // default show world chat
-      getPublicChatMessage();
       getNoficationCurrentUser();
 
       // reconnect socket if user not yet log out
