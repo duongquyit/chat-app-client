@@ -15,8 +15,9 @@
         ><i class="fa-regular fa-face-smile" style="z-index: -1"></i
       ></span>
     </div>
-    <div id="message-option">
+    <div id="message-option" @click="handleClickShowRemoveMessage(messageId)">
       <span><i class="fa-solid fa-ellipsis-vertical"></i></span>
+      <slot name="removeMessage"></slot>
     </div>
     <div
       id="message-emotion"
@@ -39,9 +40,6 @@ export default {
     messageSend: {
       type: Boolean,
     },
-    isShowMessageOption: {
-      type: Boolean,
-    },
     messageId: {
       type: String,
     },
@@ -56,9 +54,14 @@ export default {
       emit("clickIconOption", messageId, optionElement);
     };
 
+    const handleClickShowRemoveMessage = (messageId) => {
+      emit("clickShowRemoveMessage", messageId);
+    };
+
     return {
-      handleClickIcon,
       optionElement,
+      handleClickIcon,
+      handleClickShowRemoveMessage,
     };
   },
 };

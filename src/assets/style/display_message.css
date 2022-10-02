@@ -39,6 +39,7 @@
   display: flex;
   max-width: 100%;
   position: relative;
+  margin-bottom: 1px;
 }
 
 .text {
@@ -185,7 +186,7 @@
 
 .message-send-item {
   justify-content: flex-end;
-  margin-bottom: 1px;
+  margin-bottom: 2px;
 }
 
 .message-item-first {
