@@ -13,7 +13,8 @@ const vi = {
     chatType: {
       public: 'Trò chuyện Công Khai',
       group: 'Trò chuyện nhóm'
-    }
+    },
+    messageRemove: 'Tin nhắn đã được xóa',
   },
   user: {
     edit: {

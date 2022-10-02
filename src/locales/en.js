@@ -14,6 +14,7 @@ const en = {
       public: "Public chat",
       group: "Group chat",
     },
+    messageRemove: 'Message is removed',
   },
   user: {
     edit: {

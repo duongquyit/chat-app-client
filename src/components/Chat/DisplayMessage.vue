@@ -21,15 +21,37 @@
             >
               <MessageOption
                 :messageSend="true"
-                :isShowMessageOption="isShowMessageOption"
                 :messageId="message.messageId"
                 :currentMessageId="currentMessageId"
                 @clickIconOption="handleShowListIcon"
+                @clickShowRemoveMessage="handleShowRemoveMessage"
               >
+                <template v-slot:removeMessage>
+                  <div
+                    class="message-option-remove-message"
+                    :class="{
+                      'd-block':
+                        isShowRemoveMessageOption &&
+                        message.messageId === currentMessageId,
+                    }"
+                    @click="
+                      handleClickSelectMessageRemove({
+                        chatType: message.chatType,
+                        messageId: message.messageId,
+                        chatPrivateId: message.chatPrivateId,
+                        senderId: messageData.sender.uid,
+                      })
+                    "
+                  >
+                    Remove
+                  </div>
+                </template>
                 <template v-slot:listIcon>
                   <ListIconMessageReaction
                     v-if="
-                      !isShowAllIcon && currentMessageId == message.messageId
+                      !isShowAllIcon &&
+                      currentMessageId == message.messageId &&
+                      !isShowRemoveMessageOption
                     "
                     :isSendMessage="true"
                     :message="{
@@ -43,7 +65,9 @@
                   />
                   <ListAllIconMessageReaction
                     v-if="
-                      isShowAllIcon && message.messageId == currentMessageId
+                      isShowAllIcon &&
+                      message.messageId == currentMessageId &&
+                      !isShowRemoveMessageOption
                     "
                     :message="{
                       chatType: message.chatType,
@@ -62,7 +86,11 @@
                 >
                   {{ $d(message?.createdAt?.toDate(), "long") }}
                 </div>
+                <span class="text-message-remove" v-if="message.isRemoved"
+                  ><i>{{ $t("message.messageRemove") }}</i></span
+                >
                 <span
+                  v-else
                   class="text-message-send"
                   :class="{
                     'message-send-item-first':
@@ -76,7 +104,6 @@
                   v-html="message.message"
                 >
                 </span>
-
                 <div class="list-reaction" v-show="message.reaction?.length">
                   <span
                     v-for="icon in message.reaction"
@@ -101,7 +128,11 @@
               :key="message.messageId"
             >
               <div class="text">
+                <span class="text-message-remove" v-if="message.isRemoved"
+                  ><i>{{ $t("message.messageRemove") }}</i></span
+                >
                 <span
+                  v-else
                   class="text-message-receive"
                   :class="{
                     'message-item-first':
@@ -117,7 +148,7 @@
                 <div class="message-tooltip tooltip-receive">
                   {{ $d(message.createdAt?.toDate(), "long") }}
                 </div>
-                <div class="list-reaction" v-if="message.reaction?.length">
+                <div class="list-reaction" v-show="message.reaction?.length">
                   <span
                     v-for="icon in message.reaction"
                     :key="icon"
@@ -127,15 +158,17 @@
               </div>
               <MessageOption
                 :messageSend="false"
-                :isShowMessageOption="isShowMessageOption"
                 :messageId="message.messageId"
                 :currentMessageId="currentMessageId"
                 @clickIconOption="handleShowListIcon"
+                @clickShowRemoveMessage="handleShowRemoveMessage"
               >
                 <template v-slot:listIcon>
                   <ListIconMessageReaction
                     v-if="
-                      message.messageId == currentMessageId && !isShowAllIcon
+                      message.messageId == currentMessageId &&
+                      !isShowAllIcon &&
+                      !isShowRemoveMessageOption
                     "
                     :isSendMessage="false"
                     :message="{
@@ -149,7 +182,9 @@
                   />
                   <ListAllIconMessageReaction
                     v-else-if="
-                      message.messageId == currentMessageId && isShowAllIcon
+                      message.messageId == currentMessageId &&
+                      isShowAllIcon &&
+                      !isShowRemoveMessageOption
                     "
                     :message="{
                       chatType: message.chatType,
@@ -176,8 +211,13 @@ import { ref } from "@vue/reactivity";
 import { nextTick, onMounted, watch } from "@vue/runtime-core";
 
 import { isDarkMode } from "@composables/GlobalVariables";
-import { messageReaction, amountMessages } from "@composables/ChatMessage";
+import {
+  messageReaction,
+  amountMessages,
+  removeMessage,
+} from "@composables/ChatMessage";
 import { clickOutsideListEmotion } from "../../services/ClickOutside";
+import currentUser from "@/composables/CurrentUser";
 
 import MessageOption from "@components/Chat/MessageOption.vue";
 import ListIconMessageReaction from "@components/Chat/ListIconMessageReaction.vue";
@@ -198,7 +238,7 @@ export default {
     ListIconMessageReaction,
     ListAllIconMessageReaction,
   },
-  setup(props) {
+  setup() {
     const chatScrollBar = ref(null);
     const isShowListIcon = ref(false);
     const isShowMessageOption = ref(false);
@@ -283,6 +323,17 @@ export default {
       return reaction && reaction.length ? true : false;
     };
 
+    const handleClickSelectMessageRemove = (message) => {
+      removeMessage(currentUser.uid, message);
+    };
+
+    const isShowRemoveMessageOption = ref(false);
+    const handleShowRemoveMessage = (messageId) => {
+      currentMessageId.value =
+        currentMessageId.value == messageId ? "" : messageId;
+      isShowRemoveMessageOption.value = !isShowRemoveMessageOption.value;
+    };
+
     // watch change of messages
     watch(amountMessages, async () => {
       // await DOM updated then scroll bar to bottom
@@ -309,10 +360,13 @@ export default {
       currentMessageId,
       indexMessageReaction,
       isShowAllIcon,
+      isShowRemoveMessageOption,
       handleShowListIcon,
       handleReactionMessage,
       handleShowAllIcon,
       checkContainReaction,
+      handleClickSelectMessageRemove,
+      handleShowRemoveMessage,
     };
   },
 };
@@ -345,5 +399,31 @@ export default {
 
 .container-reaction {
   margin-bottom: 0.8em;
+}
+
+.message-option-remove-message {
+  font-size: 0.7em;
+  background: white;
+  border-radius: 5px;
+  position: absolute;
+  bottom: -20px;
+  z-index: 3;
+  padding: 0.5em;
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+  cursor: pointer;
+  display: none;
+}
+
+.text-message-remove {
+  font-size: 0.9em;
+  padding: 0.5em 1em;
+  border: 1px solid #8080806b;
+  border-radius: 100px;
+  font-family: system-ui;
+  color: gray;
+}
+
+.d-block {
+  display: block !important;
 }
 </style>

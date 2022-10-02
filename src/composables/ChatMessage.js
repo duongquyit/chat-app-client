@@ -39,6 +39,7 @@ const messagesResult = (listMessages) => {
       message: item.message,
       reaction: item.reaction,
       isPublicMessage: item.isPublicMessage,
+      isRemoved: item.isRemoved,
       createdAt: item.createdAt,
       ...(item.chatPrivateId && { chatPrivateId: item.chatPrivateId }),
     };
@@ -351,6 +352,35 @@ const initChatMessage = async (id, currentUserId) => {
   }
 };
 
+const removeMessage = async (
+  currentUserId,
+  { chatType, messageId, chatPrivateId, senderId }
+) => {
+  console.log(messageId);
+  try {
+    if (currentUserId !== senderId) return;
+    if (chatType === PUBLIC_KEY || chatType === GROUP_KEY) {
+      const messageRef = doc(db, "messages", messageId);
+      await updateDoc(messageRef, {
+        isRemoved: true,
+      });
+      return;
+    }
+    const messageRef = doc(
+      db,
+      "private-messages",
+      "rooms",
+      chatPrivateId,
+      messageId
+    );
+    await updateDoc(messageRef, {
+      isRemoved: true,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 export {
   messages,
   amountMessages,
@@ -363,4 +393,5 @@ export {
   createGroupChatMessage,
   getPrivateChatId,
   messageReaction,
+  removeMessage,
 };
