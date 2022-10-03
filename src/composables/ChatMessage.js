@@ -332,7 +332,7 @@ const initChatMessage = async (id, currentUserId) => {
       return {
         name: group.data().groupChatName,
         photoURL: group.data().groupChatPhotoURL,
-        isGroupChat: group.exists(),
+        isGroupChat: true,
       };
     }
     const userRef = collection(db, "users");
@@ -343,6 +343,11 @@ const initChatMessage = async (id, currentUserId) => {
     users.forEach((user) => {
       data.name = user.data().displayName;
       data.photoURL = user.data().photoURL;
+      data.user = {
+        displayName: user.data().displayName,
+        photoURL: user.data().photoURL,
+        uid: user.data().uid,
+      };
       data.privateChatRoomId = privateChatRoom;
       data.isGroupChat = false;
     });

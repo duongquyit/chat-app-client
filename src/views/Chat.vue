@@ -168,26 +168,6 @@ export default {
       roomChatInfor.image = image;
     };
 
-    const init = async () => {
-      const { id } = route.params;
-      if (id === publicMessages) {
-        chatMessagesKey.value = publicMessages;
-        getPublicChatMessage();
-        changeRoomChatInfor(`${t("message.chatType.public")}`, "");
-        return;
-      }
-      const res = await initChatMessage(id, currentUser.uid);
-      if (res.isGroupChat) {
-        getGroupChatMessage(id);
-        chatMessagesKey.value = id;
-      } else {
-        getPrivateChatMessage(res.privateChatRoomId);
-        chatMessagesKey.value = res.privateChatRoomId;
-      }
-      changeRoomChatInfor(res.name, res.photoURL);
-    };
-    init();
-
     const userIsSelected = ref({});
     const handleSelectUser = async (user) => {
       const key = user.uid;
@@ -379,6 +359,30 @@ export default {
         listUsersConnected.value[index].photoURL = imageURL.value;
       }
     };
+
+    const init = async () => {
+      const { id } = route.params;
+      if (id === publicMessages) {
+        chatMessagesKey.value = publicMessages;
+        getPublicChatMessage();
+        changeRoomChatInfor(`${t("message.chatType.public")}`, "");
+        return;
+      }
+      const res = await initChatMessage(id, currentUser.uid);
+      changeRoomChatInfor(res.name, res.photoURL);
+      isChatPrivate.value = true;
+      if (res.isGroupChat) {
+        getGroupChatMessage(id);
+        chatMessagesKey.value = id;
+        isChatGroup.value = true;
+        groupChatId.value = id;
+        return;
+      }
+      getPrivateChatMessage(res.privateChatRoomId);
+      chatMessagesKey.value = res.privateChatRoomId;
+      userIsSelected.value = res.user;
+    };
+    init();
 
     // SOCKET HANDLE -------------------------------------------------------------------------------
     onMounted(() => {
