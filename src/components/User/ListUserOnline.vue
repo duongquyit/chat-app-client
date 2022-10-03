@@ -5,7 +5,7 @@
   >
     <div
       class="public-chat"
-      :class="{ isSelected: (itemSelected = 'public-messages') }"
+      :class="{ isSelected: itemSelected === 'public-messages' }"
       @click="handleClickPublicChat"
     >
       <span>{{ $t("message.chatType.public") }}</span>
@@ -130,7 +130,7 @@ export default {
 
     const handleClickPublicChat = () => {
       emit("selectWorldChat");
-      itemSelected.value = 'public-messages';
+      itemSelected.value = "public-messages";
     };
 
     const handleClickGroupChat = () => {
