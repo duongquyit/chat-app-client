@@ -200,6 +200,7 @@
           </div>
         </div>
       </div>
+      <ListUserSeen />
     </div>
     <!-- chat input form -->
     <slot name="chatForm" :chatScrollBar="chatScrollBar"> </slot>
@@ -222,6 +223,7 @@ import currentUser from "@/composables/CurrentUser";
 import MessageOption from "@components/Chat/MessageOption.vue";
 import ListIconMessageReaction from "@components/Chat/ListIconMessageReaction.vue";
 import ListAllIconMessageReaction from "@components/Chat/ListAllIconMessageReaction.vue";
+import ListUserSeen from "@components/Chat/ListUserSeen";
 
 export default {
   name: "DisplayMessage",
@@ -237,6 +239,7 @@ export default {
     MessageOption,
     ListIconMessageReaction,
     ListAllIconMessageReaction,
+    ListUserSeen,
   },
   setup() {
     const chatScrollBar = ref(null);
