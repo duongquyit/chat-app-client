@@ -33,6 +33,7 @@
 .message-text-wrapper {
   margin-top: 0.5em;
   width: calc(100% - 2em - 50px);
+  padding-right: 8px;
 }
 
 .text-message {
@@ -40,6 +41,7 @@
   max-width: 100%;
   position: relative;
   margin-bottom: 1px;
+  flex-wrap: wrap;
 }
 
 .text {
