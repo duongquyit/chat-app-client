@@ -101,7 +101,10 @@ const getPublicChatMessage = () => {
       };
     });
     amountMessages.value = publicMessages.length;
-    messages.value.set("public-messages", messagesResult(publicMessages));
+    messages.value.set("public-messages", {
+      lastMessage: publicMessages[0],
+      messages: messagesResult(publicMessages),
+    });
   });
 };
 

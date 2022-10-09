@@ -38,7 +38,8 @@
         />
         <!-- show messages -->
         <DisplayMessage
-          :messages="messages.get(`${chatMessagesKey}`)"
+          :messages="messages.get(`${chatMessagesKey}`)?.messages"
+          :seenStatus="seenStatus.get(`${chatMessagesKey}`)"
           :currentUser="currentUser"
         >
           <!-- chat form -->
@@ -115,6 +116,7 @@ import {
   leaveGroupChat,
 } from "@composables/GroupChat";
 import currentUser from "@composables/CurrentUser";
+import { handleSeenStatus, seenStatus } from "@/composables/SeenMessageStatus";
 
 import ListUserOnline from "@components/User/ListUserOnline.vue";
 import DisplayMessage from "@components/Chat/DisplayMessage.vue";
@@ -188,6 +190,15 @@ export default {
     const handleSelectPublicChat = () => {
       router.replace({ name: "chat", params: { id: publicMessages } });
       chatMessagesKey.value = publicMessages;
+      handleSeenStatus(
+        chatMessagesKey.value,
+        {
+          uid: currentUser.uid,
+          photoURL: currentUser.photoURL,
+          name: currentUser.displayName,
+        },
+        messages.value.get(chatMessagesKey.value).lastMessage.messageId
+      );
       // change message header
       changeRoomChatInfor(`${t("message.chatType.public")}`, "");
       // get world message
@@ -447,6 +458,7 @@ export default {
       isShowEditGroupChatForm,
       groupInformation,
       groupChatId,
+      seenStatus,
       handleChatMessage,
       handleSelectUser,
       handleSelectPublicChat,

@@ -112,6 +112,10 @@
                   ></span>
                 </div>
               </div>
+              <ListUserSeen
+                v-if="handleShowUserSeen(message.messageId)"
+                :users="listUsersSeen(message.messageId)"
+              />
             </div>
           </div>
         </div>
@@ -196,6 +200,10 @@
                   />
                 </template>
               </MessageOption>
+              <ListUserSeen
+                v-if="handleShowUserSeen(message.messageId)"
+                :users="listUsersSeen(message.messageId)"
+              />
             </div>
           </div>
         </div>
@@ -222,6 +230,7 @@ import currentUser from "@/composables/CurrentUser";
 import MessageOption from "@components/Chat/MessageOption.vue";
 import ListIconMessageReaction from "@components/Chat/ListIconMessageReaction.vue";
 import ListAllIconMessageReaction from "@components/Chat/ListAllIconMessageReaction.vue";
+import ListUserSeen from "@components/Chat/ListUserSeen";
 
 export default {
   name: "DisplayMessage",
@@ -232,13 +241,17 @@ export default {
     currentUser: {
       type: Object,
     },
+    seenStatus: {
+      type: Array,
+    },
   },
   components: {
     MessageOption,
     ListIconMessageReaction,
     ListAllIconMessageReaction,
+    ListUserSeen,
   },
-  setup() {
+  setup(props) {
     const chatScrollBar = ref(null);
     const isShowListIcon = ref(false);
     const isShowMessageOption = ref(false);
@@ -334,6 +347,24 @@ export default {
       isShowRemoveMessageOption.value = !isShowRemoveMessageOption.value;
     };
 
+    // handle seen message
+    const handleShowUserSeen = (id) => {
+      const index = props.seenStatus.findIndex(
+        ({ messageId }) => messageId === id
+      );
+      return index >= 0 ? true : false;
+    };
+
+    const listUsersSeen = (messageId) => {
+      const users = [];
+      props.seenStatus.forEach((item) => {
+        if (item.messageId === messageId) {
+          users.push(item.user);
+        }
+      });
+      return users;
+    };
+
     // watch change of messages
     watch(amountMessages, async () => {
       // await DOM updated then scroll bar to bottom
@@ -367,6 +398,8 @@ export default {
       checkContainReaction,
       handleClickSelectMessageRemove,
       handleShowRemoveMessage,
+      handleShowUserSeen,
+      listUsersSeen,
     };
   },
 };
