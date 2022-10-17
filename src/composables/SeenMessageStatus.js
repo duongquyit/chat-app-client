@@ -29,7 +29,6 @@ const getAllSeenStatusInRoom = async (roomId) => {
     console.log(error);
   }
 };
-getAllSeenStatusInRoom("public-messages");
 
 const addSeenStatus = async (docRef, data) => {
   try {
@@ -51,7 +50,7 @@ const handleSeenStatus = async (roomId, user, messageId) => {
   const seenStatusRef = collection(db, "seen-status", "rooms", roomId);
   const q = query(seenStatusRef, where("user.uid", "==", user.uid), limit(1));
   const docRef = await getDocs(q);
-  if (docRef.empty) {
+  if (docRef.empty && messageId) {
     await addSeenStatus(seenStatusRef, {
       user,
       messageId,
@@ -61,7 +60,7 @@ const handleSeenStatus = async (roomId, user, messageId) => {
   }
   docRef.forEach(async (document) => {
     const docRef = doc(db, "seen-status", "rooms", roomId, document.id);
-    if (document.data().messageId != messageId) {
+    if (document.data().messageId != messageId && messageId) {
       await updateSeenStatus(docRef, {
         messageId,
         updatedAt: new serverTimestamp(),
@@ -70,4 +69,4 @@ const handleSeenStatus = async (roomId, user, messageId) => {
   });
 };
 
-export { seenStatus, handleSeenStatus };
+export { seenStatus, handleSeenStatus, getAllSeenStatusInRoom };

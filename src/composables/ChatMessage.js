@@ -126,7 +126,10 @@ const getGroupChatMessage = (groupChatId) => {
         };
       });
       amountMessages.value = groupMessages.length;
-      messages.value.set(groupChatId, messagesResult(groupMessages));
+      messages.value.set(groupChatId, {
+        lastMessage: groupMessages[0],
+        messages: messagesResult(groupMessages),
+      });
     });
   } catch (error) {
     console.log(error);
@@ -214,10 +217,10 @@ const getPrivateChatMessage = async (chatPrivateId) => {
         };
       });
       amountMessages.value = privateMessages.length;
-      messages.value.set(
-        privateMessagesRef._path.segments[2],
-        messagesResult(privateMessages)
-      );
+      messages.value.set(privateMessagesRef._path.segments[2], {
+        lastMessage: privateMessages[0],
+        messages: messagesResult(privateMessages),
+      });
     });
   } catch (error) {
     console.log(error);

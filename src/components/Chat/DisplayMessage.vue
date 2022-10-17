@@ -8,7 +8,10 @@
       >
         <div
           class="chat-message-send"
-          v-if="messageData.sender.uid == currentUser?.uid"
+          v-if="
+            messageData.sender.uid == currentUser?.uid &&
+            messageData.messages.length
+          "
         >
           <div class="message-text-wrapper">
             <div
@@ -120,7 +123,13 @@
           </div>
         </div>
         <!-- message receive -->
-        <div class="chat-message-receive" v-else>
+        <div
+          class="chat-message-receive"
+          v-else-if="
+            messageData.sender.uid != currentUser?.uid &&
+            messageData.messages.length
+          "
+        >
           <img :src="messageData.sender.photoURL" />
           <div class="message-text-wrapper">
             <div
@@ -259,6 +268,7 @@ export default {
     const currentMessageId = ref("");
     const currentOption = ref(null);
 
+    // handle reaction message
     const handleReactionMessage = (
       icon,
       { messageId, chatType, chatPrivateId }
@@ -349,7 +359,7 @@ export default {
 
     // handle seen message
     const handleShowUserSeen = (id) => {
-      const index = props.seenStatus.findIndex(
+      const index = props.seenStatus?.findIndex(
         ({ messageId }) => messageId === id
       );
       return index >= 0 ? true : false;
@@ -358,7 +368,7 @@ export default {
     const listUsersSeen = (messageId) => {
       const users = [];
       props.seenStatus.forEach((item) => {
-        if (item.messageId === messageId) {
+        if (item.messageId === messageId && item.user.uid != currentUser.uid) {
           users.push(item.user);
         }
       });
