@@ -81,7 +81,7 @@
 
 <script>
 import { reactive, ref } from "@vue/reactivity";
-import { onMounted } from "@vue/runtime-core";
+import { onMounted, watch } from "@vue/runtime-core";
 import { socket } from "@plugins/socket";
 import { useI18n } from "vue-i18n";
 
@@ -116,7 +116,11 @@ import {
   leaveGroupChat,
 } from "@composables/GroupChat";
 import currentUser from "@composables/CurrentUser";
-import { handleSeenStatus, seenStatus } from "@/composables/SeenMessageStatus";
+import {
+  handleSeenStatus,
+  seenStatus,
+  getAllSeenStatusInRoom,
+} from "@/composables/SeenMessageStatus";
 
 import ListUserOnline from "@components/User/ListUserOnline.vue";
 import DisplayMessage from "@components/Chat/DisplayMessage.vue";
@@ -128,6 +132,7 @@ import SendChatMessageForm from "@components/Chat/SendChatMessageForm.vue";
 import Emotion from "@components/Template/Emotion.vue";
 import GroupChatForm from "@components/Group/GroupChatFrom.vue";
 import { useRoute, useRouter } from "vue-router";
+import debounce from "@/composables/debounce";
 
 export default {
   name: "ChatPage",
@@ -170,44 +175,80 @@ export default {
       roomChatInfor.image = image;
     };
 
+    const handleSelectChat = (
+      chatMessageKey,
+      user,
+      lastMessage,
+      { name, photoURL },
+      { isPrivateVal, isGroupval, callback, data }
+    ) => {
+      changeRoomChatInfor(name, photoURL);
+      handleSeenStatus(chatMessageKey, user, lastMessage);
+      getAllSeenStatusInRoom(chatMessageKey);
+      isChatPrivate.value = isPrivateVal;
+      isChatGroup.value = isGroupval;
+      if (isPrivateVal && !isGroupval && data) {
+        callback(data);
+        return;
+      }
+      callback();
+    };
+
     const userIsSelected = ref({});
     const handleSelectUser = async (user) => {
       const key = user.uid;
       router.replace({ name: "chat", params: { id: key } });
-      changeRoomChatInfor(user.displayName, user.photoURL);
       // get user is select to chat private
       userIsSelected.value = user;
       // get message private between user and other user
       const chatPrivate = await getPrivateChatId(currentUser.uid, key);
       chatMessagesKey.value = chatPrivate;
-      getPrivateChatMessage(chatPrivate);
-      // set status chat
-      isChatPrivate.value = true;
-      isChatGroup.value = false;
-      addUserToRoom(user.socket);
-    };
-
-    const handleSelectPublicChat = () => {
-      router.replace({ name: "chat", params: { id: publicMessages } });
-      chatMessagesKey.value = publicMessages;
-      handleSeenStatus(
+      await getPrivateChatMessage(chatPrivate);
+      handleSelectChat(
         chatMessagesKey.value,
         {
           uid: currentUser.uid,
           photoURL: currentUser.photoURL,
           name: currentUser.displayName,
         },
-        messages.value.get(chatMessagesKey.value).lastMessage.messageId
+        messages.value.get(chatMessagesKey.value)?.lastMessage?.messageId,
+        {
+          name: user.displayName,
+          photoURL: user.photoURL,
+        },
+        {
+          isPrivateVal: true,
+          isGroupval: false,
+          callback: addUserToRoom,
+          data: user.socket,
+        }
       );
-      // change message header
-      changeRoomChatInfor(`${t("message.chatType.public")}`, "");
+    };
+
+    const handleSelectPublicChat = async () => {
+      router.replace({ name: "chat", params: { id: publicMessages } });
+      chatMessagesKey.value = publicMessages;
       // get world message
-      getPublicChatMessage();
-      // set status chat
-      isChatPrivate.value = false;
-      isChatGroup.value = false;
-      // remove user out of room private chat
-      removeUserFromRoom();
+      await getPublicChatMessage();
+      // seend status
+      handleSelectChat(
+        chatMessagesKey.value,
+        {
+          uid: currentUser.uid,
+          photoURL: currentUser.photoURL,
+          name: currentUser.displayName,
+        },
+        messages.value.get(chatMessagesKey.value)?.lastMessage?.messageId,
+        {
+          name: `${t("message.chatType.public")}`,
+          photoURL: "",
+        },
+        {
+          isPrivateVal: false,
+          isGroupval: false,
+          callback: removeUserFromRoom,
+        }
+      );
     };
 
     // HANDLE GROUP --------------------------------------------------------------------------------
@@ -235,17 +276,32 @@ export default {
       isShowAddGroupForm.value = false;
     };
 
-    const handleSelectGroupChat = (group) => {
+    const handleSelectGroupChat = async (group) => {
       const key = group.groupChatId;
       router.replace({ name: "chat", params: { id: key } });
       chatMessagesKey.value = key;
-      changeRoomChatInfor(group.groupChatName, group.groupChatPhotoURL);
-      isChatPrivate.value = true;
-      isChatGroup.value = true;
       groupChatId.value = group.groupChatId;
-      getGroupChatMessage(groupChatId.value);
+      await getGroupChatMessage(groupChatId.value);
       // remove user out of room private chat
-      removeUserFromRoom();
+      // seend status
+      handleSelectChat(
+        chatMessagesKey.value,
+        {
+          uid: currentUser.uid,
+          photoURL: currentUser.photoURL,
+          name: currentUser.displayName,
+        },
+        messages.value.get(chatMessagesKey.value)?.lastMessage?.messageId,
+        {
+          name: group.groupChatName,
+          photoURL: group.groupChatPhotoURL,
+        },
+        {
+          isPrivateVal: true,
+          isGroupval: true,
+          callback: removeUserFromRoom,
+        }
+      );
     };
 
     const isShowEditGroupChatForm = ref(false);
@@ -371,29 +427,49 @@ export default {
       }
     };
 
+    // init chat
     const init = async () => {
       const { id } = route.params;
       if (id === publicMessages) {
         chatMessagesKey.value = publicMessages;
         getPublicChatMessage();
         changeRoomChatInfor(`${t("message.chatType.public")}`, "");
-        return;
+      } else {
+        const res = await initChatMessage(id, currentUser.uid);
+        changeRoomChatInfor(res.name, res.photoURL);
+        isChatPrivate.value = true;
+        if (res.isGroupChat) {
+          getGroupChatMessage(id);
+          chatMessagesKey.value = id;
+          isChatGroup.value = true;
+          groupChatId.value = id;
+        } else {
+          getPrivateChatMessage(res.privateChatRoomId);
+          chatMessagesKey.value = res.privateChatRoomId;
+          userIsSelected.value = res.user;
+        }
       }
-      const res = await initChatMessage(id, currentUser.uid);
-      changeRoomChatInfor(res.name, res.photoURL);
-      isChatPrivate.value = true;
-      if (res.isGroupChat) {
-        getGroupChatMessage(id);
-        chatMessagesKey.value = id;
-        isChatGroup.value = true;
-        groupChatId.value = id;
-        return;
-      }
-      getPrivateChatMessage(res.privateChatRoomId);
-      chatMessagesKey.value = res.privateChatRoomId;
-      userIsSelected.value = res.user;
+      getAllSeenStatusInRoom(chatMessagesKey.value);
     };
     init();
+
+    watch(
+      messages,
+      () => {
+        debounce(1000, () => {
+          handleSeenStatus(
+            chatMessagesKey.value,
+            {
+              uid: currentUser.uid,
+              photoURL: currentUser.photoURL,
+              name: currentUser.displayName,
+            },
+            messages.value.get(chatMessagesKey.value)?.lastMessage?.messageId
+          );
+        });
+      },
+      { deep: true }
+    );
 
     // SOCKET HANDLE -------------------------------------------------------------------------------
     onMounted(() => {
