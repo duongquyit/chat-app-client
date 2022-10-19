@@ -24,6 +24,16 @@ const PRIVATE_KEY = "PRIVATE";
 
 const amountMessages = ref(0);
 
+const handleGetMessages = async (messages, ROOM_KEY, callback) => {
+  try {
+    if (!messages.has(ROOM_KEY)) {
+      await callback(ROOM_KEY);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 const messagesResult = (listMessages) => {
   listMessages.reverse();
   const messageItem = {
@@ -395,6 +405,7 @@ const removeMessage = async (
 export {
   messages,
   amountMessages,
+  handleGetMessages,
   initChatMessage,
   createPublicChatMessage,
   getPublicChatMessage,

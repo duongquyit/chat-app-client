@@ -87,6 +87,7 @@ import { useI18n } from "vue-i18n";
 
 import {
   messages,
+  handleGetMessages,
   initChatMessage,
   createPublicChatMessage,
   createPrivateChatMessage,
@@ -184,7 +185,9 @@ export default {
     ) => {
       changeRoomChatInfor(name, photoURL);
       handleSeenStatus(chatMessageKey, user, lastMessage);
-      getAllSeenStatusInRoom(chatMessageKey);
+      if (!seenStatus.value.has(chatMessageKey)) {
+        getAllSeenStatusInRoom(chatMessageKey);
+      }
       isChatPrivate.value = isPrivateVal;
       isChatGroup.value = isGroupval;
       if (isPrivateVal && !isGroupval && data) {
@@ -203,7 +206,7 @@ export default {
       // get message private between user and other user
       const chatPrivate = await getPrivateChatId(currentUser.uid, key);
       chatMessagesKey.value = chatPrivate;
-      await getPrivateChatMessage(chatPrivate);
+      await handleGetMessages(messages.value, chatPrivate, getPrivateChatMessage);
       handleSelectChat(
         chatMessagesKey.value,
         {
@@ -229,7 +232,7 @@ export default {
       router.replace({ name: "chat", params: { id: publicMessages } });
       chatMessagesKey.value = publicMessages;
       // get world message
-      await getPublicChatMessage();
+      await handleGetMessages(messages.value, publicMessages, getPublicChatMessage);
       // seend status
       handleSelectChat(
         chatMessagesKey.value,
@@ -281,9 +284,7 @@ export default {
       router.replace({ name: "chat", params: { id: key } });
       chatMessagesKey.value = key;
       groupChatId.value = group.groupChatId;
-      await getGroupChatMessage(groupChatId.value);
-      // remove user out of room private chat
-      // seend status
+      await handleGetMessages(messages.value, key, getGroupChatMessage);
       handleSelectChat(
         chatMessagesKey.value,
         {
