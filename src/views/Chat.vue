@@ -38,9 +38,9 @@
         />
         <!-- show messages -->
         <DisplayMessage
-          :messages="messages.get(`${chatMessagesKey}`)?.messages"
-          :seenStatus="seenStatus.get(`${chatMessagesKey}`)"
-          :currentUser="currentUser"
+          :chatMessagesKey="chatMessagesKey"
+          :isChatPrivate="isChatPrivate"
+          :isChatGroup="isChatGroup"
         >
           <!-- chat form -->
           <template v-slot:chatForm="{ chatScrollBar }">
@@ -206,7 +206,11 @@ export default {
       // get message private between user and other user
       const chatPrivate = await getPrivateChatId(currentUser.uid, key);
       chatMessagesKey.value = chatPrivate;
-      await handleGetMessages(messages.value, chatPrivate, getPrivateChatMessage);
+      await handleGetMessages(
+        messages.value,
+        chatPrivate,
+        getPrivateChatMessage
+      );
       handleSelectChat(
         chatMessagesKey.value,
         {
@@ -232,7 +236,11 @@ export default {
       router.replace({ name: "chat", params: { id: publicMessages } });
       chatMessagesKey.value = publicMessages;
       // get world message
-      await handleGetMessages(messages.value, publicMessages, getPublicChatMessage);
+      await handleGetMessages(
+        messages.value,
+        publicMessages,
+        getPublicChatMessage
+      );
       // seend status
       handleSelectChat(
         chatMessagesKey.value,
@@ -523,19 +531,20 @@ export default {
     return {
       messages,
       chatMessagesKey,
-      isChatPrivate,
-      currentUser,
-      listUsersConnected,
+      groupInformation,
+      groupChatId,
+      seenStatus,
       roomChatInfor,
+      currentUser,
+      countUnseen,
+      listUsersConnected,
+      isChatPrivate,
+      isChatGroup,
       isShowUploadImage,
       imageURL,
       isDarkMode,
       isShowAddGroupForm,
-      countUnseen,
       isShowEditGroupChatForm,
-      groupInformation,
-      groupChatId,
-      seenStatus,
       handleChatMessage,
       handleSelectUser,
       handleSelectPublicChat,

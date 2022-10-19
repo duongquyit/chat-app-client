@@ -16,13 +16,14 @@ import {
 import { ref } from "vue";
 import { db } from "@config/firebase";
 
-const messages = ref(new Map());
-
+// type message key
 const PUBLIC_KEY = "PUBLIC";
 const GROUP_KEY = "GROUP";
 const PRIVATE_KEY = "PRIVATE";
+const LIMIT_MESSAGE = 50;
 
-const amountMessages = ref(0);
+const messages = ref(new Map());
+const lastMessageId = ref("");
 
 const handleGetMessages = async (messages, ROOM_KEY, callback) => {
   try {
@@ -32,9 +33,10 @@ const handleGetMessages = async (messages, ROOM_KEY, callback) => {
   } catch (error) {
     console.log(error);
   }
-}
+};
 
 const messagesResult = (listMessages) => {
+  lastMessageId.value = listMessages[0].messageId;
   listMessages.reverse();
   const messageItem = {
     sender: {},
@@ -91,43 +93,55 @@ const createPublicChatMessage = async (message, sender) => {
   }
 };
 
-const getPublicChatMessage = () => {
-  console.log("get public chat");
-  // query get message sort by created at and limit 50 message
-  const q = query(
-    messagesRef,
-    where("isPublicMessage", "==", true),
-    orderBy("createdAt", "desc"),
-    limit(50)
-  );
-  // handle get realtime message
-  onSnapshot(q, (querySnapshot) => {
-    // store message real time
-    const publicMessages = querySnapshot.docs.map((item) => {
-      return {
-        ...item.data(),
-        messageId: item.id,
-        chatType: PUBLIC_KEY,
-      };
+const messageUnsubscrice = new Map();
+
+const getPublicChatMessage = (limitCount = 1) => {
+  try {
+    const publicMessageKey = "public-messages";
+    if (messageUnsubscrice.has(publicMessageKey)) {
+      messageUnsubscrice.get(publicMessageKey)();
+    }
+    // query get message sort by created at and limit 50 message
+    const q = query(
+      messagesRef,
+      where("isPublicMessage", "==", true),
+      orderBy("createdAt", "desc"),
+      limit(LIMIT_MESSAGE * limitCount)
+    );
+    // handle get realtime message
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      // store message real time
+      const publicMessages = querySnapshot.docs.map((item) => {
+        return {
+          ...item.data(),
+          messageId: item.id,
+          chatType: PUBLIC_KEY,
+        };
+      });
+      messages.value.set(publicMessageKey, {
+        lastMessage: publicMessages[0],
+        messages: messagesResult(publicMessages),
+      });
     });
-    amountMessages.value = publicMessages.length;
-    messages.value.set("public-messages", {
-      lastMessage: publicMessages[0],
-      messages: messagesResult(publicMessages),
-    });
-  });
+    messageUnsubscrice.set(publicMessageKey, unsubscribe);
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 // GROUP CHAT MESSAGE
-const getGroupChatMessage = (groupChatId) => {
+const getGroupChatMessage = (groupChatId, limitCount = 1) => {
   try {
+    if (messageUnsubscrice.has(groupChatId)) {
+      messageUnsubscrice.get(groupChatId)();
+    }
     const q = query(
       messagesRef,
       where("groupChatId", "==", `${groupChatId}`),
       orderBy("createdAt", "desc"),
-      limit(50)
+      limit(LIMIT_MESSAGE * limitCount)
     );
-    onSnapshot(q, (querySnapshot) => {
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const groupMessages = querySnapshot.docs.map((item) => {
         return {
           ...item.data(),
@@ -135,12 +149,12 @@ const getGroupChatMessage = (groupChatId) => {
           chatType: GROUP_KEY,
         };
       });
-      amountMessages.value = groupMessages.length;
       messages.value.set(groupChatId, {
         lastMessage: groupMessages[0],
         messages: messagesResult(groupMessages),
       });
     });
+    messageUnsubscrice.set(groupChatId, unsubscribe);
   } catch (error) {
     console.log(error);
   }
@@ -204,8 +218,11 @@ const createPrivateChatMessage = async (message, sender, receiver) => {
 };
 
 // get private chat
-const getPrivateChatMessage = async (chatPrivateId) => {
+const getPrivateChatMessage = async (chatPrivateId, limitCount = 1) => {
   try {
+    if (messageUnsubscrice.has(chatPrivateId)) {
+      messageUnsubscrice.get(chatPrivateId)();
+    }
     const privateMessagesRef = collection(
       db,
       "private-messages",
@@ -215,9 +232,9 @@ const getPrivateChatMessage = async (chatPrivateId) => {
     const q = query(
       privateMessagesRef,
       orderBy("createdAt", "desc"),
-      limit(50)
+      limit(LIMIT_MESSAGE * limitCount)
     );
-    onSnapshot(q, (querySnapshot) => {
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const privateMessages = querySnapshot.docs.map((item) => {
         return {
           ...item.data(),
@@ -226,12 +243,13 @@ const getPrivateChatMessage = async (chatPrivateId) => {
           chatPrivateId,
         };
       });
-      amountMessages.value = privateMessages.length;
+      console.log("running");
       messages.value.set(privateMessagesRef._path.segments[2], {
         lastMessage: privateMessages[0],
         messages: messagesResult(privateMessages),
       });
     });
+    messageUnsubscrice.set(`${chatPrivateId}`, unsubscribe);
   } catch (error) {
     console.log(error);
   }
@@ -404,7 +422,7 @@ const removeMessage = async (
 
 export {
   messages,
-  amountMessages,
+  lastMessageId,
   handleGetMessages,
   initChatMessage,
   createPublicChatMessage,

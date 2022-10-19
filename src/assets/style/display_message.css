@@ -4,6 +4,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  position: relative;
 }
 
 .chat-message-show-message {
@@ -11,6 +12,7 @@
   max-height: 100%;
   padding: 0.5em;
   overflow-y: auto;
+  padding-top: 4em;
 }
 
 .message {
