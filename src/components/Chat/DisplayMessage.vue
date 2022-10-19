@@ -1,9 +1,20 @@
 <template>
   <div class="chat-message-list-message">
-    <div class="chat-message-show-message" ref="chatScrollBar">
+    <div
+      class="loading-limit-message-wrapper"
+      :class="{ 'd-block': loadingNewMessage }"
+    >
+      <img :src="loadingImage" alt="" />
+    </div>
+    <div
+      class="chat-message-show-message"
+      @scroll="handleScrollBoxMessage"
+      ref="chatScrollBar"
+    >
       <div
         class="message"
-        v-for="(messageData, index) in messages"
+        v-for="(messageData, index) in messages.get(`${chatMessagesKey}`)
+          ?.messages"
         :key="index"
       >
         <div
@@ -230,28 +241,39 @@ import { nextTick, onMounted, watch } from "@vue/runtime-core";
 import { isDarkMode } from "@composables/GlobalVariables";
 import {
   messageReaction,
-  amountMessages,
   removeMessage,
+  lastMessageId,
 } from "@composables/ChatMessage";
 import { clickOutsideListEmotion } from "../../services/ClickOutside";
 import currentUser from "@/composables/CurrentUser";
+import { seenStatus } from "@/composables/SeenMessageStatus";
+import {
+  messages,
+  getPublicChatMessage,
+  getPrivateChatMessage,
+  getGroupChatMessage,
+} from "@/composables/ChatMessage";
 
 import MessageOption from "@components/Chat/MessageOption.vue";
 import ListIconMessageReaction from "@components/Chat/ListIconMessageReaction.vue";
 import ListAllIconMessageReaction from "@components/Chat/ListAllIconMessageReaction.vue";
 import ListUserSeen from "@components/Chat/ListUserSeen";
+import debounce from "@/composables/debounce";
+
+// loading image import
+import loadingImage from "@/assets/images/Rolling-1s-200px.gif";
 
 export default {
   name: "DisplayMessage",
   props: {
-    messages: {
-      type: Array,
+    chatMessagesKey: {
+      type: String,
     },
-    currentUser: {
-      type: Object,
+    isChatPrivate: {
+      type: Boolean,
     },
-    seenStatus: {
-      type: Array,
+    isChatGroup: {
+      type: Boolean,
     },
   },
   components: {
@@ -359,15 +381,15 @@ export default {
 
     // handle seen message
     const handleShowUserSeen = (id) => {
-      const index = props.seenStatus?.findIndex(
-        ({ messageId }) => messageId === id
-      );
+      const index = seenStatus.value
+        .get(props.chatMessagesKey)
+        ?.findIndex(({ messageId }) => messageId === id);
       return index >= 0 ? true : false;
     };
 
     const listUsersSeen = (messageId) => {
       const users = [];
-      props.seenStatus.forEach((item) => {
+      seenStatus.value.get(props.chatMessagesKey).forEach((item) => {
         if (item.messageId === messageId && item.user.uid != currentUser.uid) {
           users.push(item.user);
         }
@@ -375,8 +397,29 @@ export default {
       return users;
     };
 
+    // handle scroll
+    const loadingNewMessage = ref(false);
+    const handleScrollBoxMessage = (e) => {
+      const timeDelay = 1000;
+      loadingNewMessage.value = false;
+      debounce(timeDelay, () => {
+        if (e.target.scrollTop === 0) {
+          loadingNewMessage.value = true;
+          if (!props.isChatPrivate) {
+            getPublicChatMessage(2);
+          } else {
+            if (props.isChatGroup) {
+              getGroupChatMessage(props.chatMessagesKey);
+              return;
+            }
+            getPrivateChatMessage(props.chatMessagesKey, 2);
+          }
+        }
+      });
+    };
+
     // watch change of messages
-    watch(amountMessages, async () => {
+    watch(lastMessageId, async () => {
       // await DOM updated then scroll bar to bottom
       await nextTick();
       chatScrollBar.value.scrollTop = chatScrollBar.value.scrollHeight;
@@ -394,6 +437,9 @@ export default {
     });
 
     return {
+      seenStatus,
+      messages,
+      currentUser,
       chatScrollBar,
       isDarkMode,
       isShowListIcon,
@@ -402,6 +448,8 @@ export default {
       indexMessageReaction,
       isShowAllIcon,
       isShowRemoveMessageOption,
+      loadingImage,
+      loadingNewMessage,
       handleShowListIcon,
       handleReactionMessage,
       handleShowAllIcon,
@@ -410,6 +458,7 @@ export default {
       handleShowRemoveMessage,
       handleShowUserSeen,
       listUsersSeen,
+      handleScrollBoxMessage,
     };
   },
 };
@@ -468,5 +517,19 @@ export default {
 
 .d-block {
   display: block !important;
+}
+
+.loading-limit-message-wrapper {
+  position: absolute;
+  width: calc(100% - 0.5em);
+  height: 4em;
+  top: 0;
+  padding: 0.5em;
+  display: none;
+}
+
+.loading-limit-message-wrapper img {
+  width: 3em;
+  height: 3em;
 }
 </style>
