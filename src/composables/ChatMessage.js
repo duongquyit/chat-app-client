@@ -78,6 +78,30 @@ const messagesResult = (listMessages) => {
   return result;
 };
 
+const handleLoadMessages = (query, roomKey, CHAT_KEY) => {
+  if (messageUnsubscrice.has(roomKey)) {
+    messageUnsubscrice.get(roomKey)();
+  }
+  // handle get realtime message
+  const unsubscribe = onSnapshot(query, (querySnapshot) => {
+    // store message real time
+    const messageData = querySnapshot.docs.map((item) => {
+      return {
+        ...item.data(),
+        messageId: item.id,
+        chatType: CHAT_KEY,
+        ...(CHAT_KEY === PRIVATE_KEY && { chatPrivateId: roomKey }),
+      };
+    });
+    messages.value.set(roomKey, {
+      lastMessage: messageData[0],
+      messages: messagesResult(messageData),
+      amountMessages: messageData.length,
+    });
+  });
+  messageUnsubscrice.set(roomKey, unsubscribe);
+};
+
 // PUBLIC CHAT
 // collection for public message
 const messagesRef = collection(db, "messages");
@@ -101,9 +125,6 @@ const createPublicChatMessage = async (message, sender) => {
 const messageUnsubscrice = new Map();
 const getPublicChatMessage = (limitCount = 1) => {
   try {
-    if (messageUnsubscrice.has(publicMessageKey)) {
-      messageUnsubscrice.get(publicMessageKey)();
-    }
     // query get message sort by created at and limit 50 message
     const q = query(
       messagesRef,
@@ -111,23 +132,7 @@ const getPublicChatMessage = (limitCount = 1) => {
       orderBy("createdAt", "desc"),
       limit(LIMIT_MESSAGE * limitCount)
     );
-    // handle get realtime message
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      // store message real time
-      const publicMessages = querySnapshot.docs.map((item) => {
-        return {
-          ...item.data(),
-          messageId: item.id,
-          chatType: PUBLIC_KEY,
-        };
-      });
-      messages.value.set(publicMessageKey, {
-        lastMessage: publicMessages[0],
-        messages: messagesResult(publicMessages),
-        amountMessages: publicMessages.length,
-      });
-    });
-    messageUnsubscrice.set(publicMessageKey, unsubscribe);
+    handleLoadMessages(q, publicMessageKey, PUBLIC_KEY);
   } catch (error) {
     console.log(error);
   }
@@ -136,30 +141,13 @@ const getPublicChatMessage = (limitCount = 1) => {
 // GROUP CHAT MESSAGE
 const getGroupChatMessage = (groupChatId, limitCount = 1) => {
   try {
-    if (messageUnsubscrice.has(groupChatId)) {
-      messageUnsubscrice.get(groupChatId)();
-    }
     const q = query(
       messagesRef,
       where("groupChatId", "==", `${groupChatId}`),
       orderBy("createdAt", "desc"),
       limit(LIMIT_MESSAGE * limitCount)
     );
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const groupMessages = querySnapshot.docs.map((item) => {
-        return {
-          ...item.data(),
-          messageId: item.id,
-          chatType: GROUP_KEY,
-        };
-      });
-      messages.value.set(groupChatId, {
-        lastMessage: groupMessages[0],
-        messages: messagesResult(groupMessages),
-        amountMessages: groupMessages.length,
-      });
-    });
-    messageUnsubscrice.set(groupChatId, unsubscribe);
+    handleLoadMessages(q, groupChatId, GROUP_KEY);
   } catch (error) {
     console.log(error);
   }
@@ -225,9 +213,6 @@ const createPrivateChatMessage = async (message, sender, receiver) => {
 // get private chat
 const getPrivateChatMessage = async (chatPrivateId, limitCount = 1) => {
   try {
-    if (messageUnsubscrice.has(chatPrivateId)) {
-      messageUnsubscrice.get(chatPrivateId)();
-    }
     const privateMessagesRef = collection(
       db,
       "private-messages",
@@ -239,22 +224,7 @@ const getPrivateChatMessage = async (chatPrivateId, limitCount = 1) => {
       orderBy("createdAt", "desc"),
       limit(LIMIT_MESSAGE * limitCount)
     );
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const privateMessages = querySnapshot.docs.map((item) => {
-        return {
-          ...item.data(),
-          messageId: item.id,
-          chatType: PRIVATE_KEY,
-          chatPrivateId,
-        };
-      });
-      messages.value.set(privateMessagesRef._path.segments[2], {
-        lastMessage: privateMessages[0],
-        messages: messagesResult(privateMessages),
-        amountMessages: privateMessages.length,
-      });
-    });
-    messageUnsubscrice.set(`${chatPrivateId}`, unsubscribe);
+    handleLoadMessages(q, chatPrivateId, PRIVATE_KEY);
   } catch (error) {
     console.log(error);
   }
