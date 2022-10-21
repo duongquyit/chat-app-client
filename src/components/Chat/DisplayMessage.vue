@@ -249,6 +249,7 @@ import currentUser from "@/composables/CurrentUser";
 import { seenStatus } from "@/composables/SeenMessageStatus";
 import {
   messages,
+  LIMIT_MESSAGE,
   getPublicChatMessage,
   getPrivateChatMessage,
   getGroupChatMessage,
@@ -399,20 +400,24 @@ export default {
 
     // handle scroll
     const loadingNewMessage = ref(false);
+    const limitCount = ref(1);
     const handleScrollBoxMessage = (e) => {
       const timeDelay = 1000;
       loadingNewMessage.value = false;
       debounce(timeDelay, () => {
         if (e.target.scrollTop === 0) {
           loadingNewMessage.value = true;
+          const { amountMessages } = messages.value.get(props.chatMessagesKey);
+          limitCount.value =
+            Math.round(amountMessages / LIMIT_MESSAGE - 0.5) + 1;
           if (!props.isChatPrivate) {
-            getPublicChatMessage(2);
+            getPublicChatMessage(limitCount.value);
           } else {
             if (props.isChatGroup) {
-              getGroupChatMessage(props.chatMessagesKey);
+              getGroupChatMessage(props.chatMessagesKey, limitCount.value);
               return;
             }
-            getPrivateChatMessage(props.chatMessagesKey, 2);
+            getPrivateChatMessage(props.chatMessagesKey, limitCount.value);
           }
         }
       });
@@ -430,6 +435,37 @@ export default {
         document.addEventListener("click", clickOutsideListIcon);
       }
     });
+
+    watch(
+      messages,
+      async (newVal) => {
+        if (newVal.get(props.chatMessagesKey).amountMessages > LIMIT_MESSAGE) {
+          const currentPositon = chatScrollBar.value.scrollHeight;
+          await nextTick();
+          chatScrollBar.value.scrollTop =
+            chatScrollBar.value.scrollHeight - currentPositon;
+        }
+      },
+      { deep: true }
+    );
+
+    watch(
+      () => props.chatMessagesKey,
+      async () => {
+        limitCount.value = 1;
+        await nextTick();
+        chatScrollBar.value.scrollTop = chatScrollBar.value.scrollHeight;
+      }
+    );
+
+    watch(
+      [limitCount, loadingNewMessage],
+      ([newLimitVal, newLoadVal], [oldLimitval, oldLoadVal]) => {
+        if (newLimitVal === oldLimitval) {
+          loadingNewMessage.value = false;
+        }
+      }
+    );
 
     onMounted(() => {
       // set scroll bar auto bottom when mounted
