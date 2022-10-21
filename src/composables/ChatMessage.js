@@ -22,12 +22,17 @@ const GROUP_KEY = "GROUP";
 const PRIVATE_KEY = "PRIVATE";
 const LIMIT_MESSAGE = 50;
 
+const publicMessageKey = "public-messages";
 const messages = ref(new Map());
 const lastMessageId = ref("");
 
 const handleGetMessages = async (messages, ROOM_KEY, callback) => {
   try {
     if (!messages.has(ROOM_KEY)) {
+      if (ROOM_KEY === publicMessageKey) {
+        await callback();
+        return;
+      }
       await callback(ROOM_KEY);
     }
   } catch (error) {
@@ -36,7 +41,7 @@ const handleGetMessages = async (messages, ROOM_KEY, callback) => {
 };
 
 const messagesResult = (listMessages) => {
-  lastMessageId.value = listMessages[0].messageId;
+  lastMessageId.value = listMessages.length ? listMessages[0].messageId : null;
   listMessages.reverse();
   const messageItem = {
     sender: {},
@@ -94,10 +99,8 @@ const createPublicChatMessage = async (message, sender) => {
 };
 
 const messageUnsubscrice = new Map();
-
 const getPublicChatMessage = (limitCount = 1) => {
   try {
-    const publicMessageKey = "public-messages";
     if (messageUnsubscrice.has(publicMessageKey)) {
       messageUnsubscrice.get(publicMessageKey)();
     }
@@ -121,6 +124,7 @@ const getPublicChatMessage = (limitCount = 1) => {
       messages.value.set(publicMessageKey, {
         lastMessage: publicMessages[0],
         messages: messagesResult(publicMessages),
+        amountMessages: publicMessages.length,
       });
     });
     messageUnsubscrice.set(publicMessageKey, unsubscribe);
@@ -152,6 +156,7 @@ const getGroupChatMessage = (groupChatId, limitCount = 1) => {
       messages.value.set(groupChatId, {
         lastMessage: groupMessages[0],
         messages: messagesResult(groupMessages),
+        amountMessages: groupMessages.length,
       });
     });
     messageUnsubscrice.set(groupChatId, unsubscribe);
@@ -243,10 +248,10 @@ const getPrivateChatMessage = async (chatPrivateId, limitCount = 1) => {
           chatPrivateId,
         };
       });
-      console.log("running");
       messages.value.set(privateMessagesRef._path.segments[2], {
         lastMessage: privateMessages[0],
         messages: messagesResult(privateMessages),
+        amountMessages: privateMessages.length,
       });
     });
     messageUnsubscrice.set(`${chatPrivateId}`, unsubscribe);
@@ -423,6 +428,7 @@ const removeMessage = async (
 export {
   messages,
   lastMessageId,
+  LIMIT_MESSAGE,
   handleGetMessages,
   initChatMessage,
   createPublicChatMessage,
