@@ -2,6 +2,7 @@
   <div
     class="list-users-seen-wrapper"
     :class="{ 'seen-single-item': users.length == 1 }"
+    v-if="users.length"
   >
     <div
       class="user-seen-item"

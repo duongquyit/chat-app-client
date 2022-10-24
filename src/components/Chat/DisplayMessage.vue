@@ -127,7 +127,6 @@
                 </div>
               </div>
               <ListUserSeen
-                v-if="handleShowUserSeen(message.messageId)"
                 :users="listUsersSeen(message.messageId)"
               />
             </div>
@@ -221,7 +220,6 @@
                 </template>
               </MessageOption>
               <ListUserSeen
-                v-if="handleShowUserSeen(message.messageId)"
                 :users="listUsersSeen(message.messageId)"
               />
             </div>
@@ -381,16 +379,9 @@ export default {
     };
 
     // handle seen message
-    const handleShowUserSeen = (id) => {
-      const index = seenStatus.value
-        .get(props.chatMessagesKey)
-        ?.findIndex(({ messageId }) => messageId === id);
-      return index >= 0 ? true : false;
-    };
-
     const listUsersSeen = (messageId) => {
       const users = [];
-      seenStatus.value.get(props.chatMessagesKey).forEach((item) => {
+      seenStatus.value.get(props.chatMessagesKey)?.forEach((item) => {
         if (item.messageId === messageId && item.user.uid != currentUser.uid) {
           users.push(item.user);
         }
@@ -492,7 +483,6 @@ export default {
       checkContainReaction,
       handleClickSelectMessageRemove,
       handleShowRemoveMessage,
-      handleShowUserSeen,
       listUsersSeen,
       handleScrollBoxMessage,
     };
