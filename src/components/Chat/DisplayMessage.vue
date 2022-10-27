@@ -126,9 +126,7 @@
                   ></span>
                 </div>
               </div>
-              <ListUserSeen
-                :users="listUsersSeen(message.messageId)"
-              />
+              <ListUserSeen :users="listUsersSeen(message.messageId)" />
             </div>
           </div>
         </div>
@@ -219,13 +217,15 @@
                   />
                 </template>
               </MessageOption>
-              <ListUserSeen
-                :users="listUsersSeen(message.messageId)"
-              />
+              <ListUserSeen :users="listUsersSeen(message.messageId)" />
             </div>
           </div>
         </div>
       </div>
+      <TextTyping
+        v-if="listUsersTying.length && roomKey === chatMessagesKey"
+        :users="listUsersTying"
+      />
     </div>
     <!-- chat input form -->
     <slot name="chatForm" :chatScrollBar="chatScrollBar"> </slot>
@@ -252,12 +252,14 @@ import {
   getPrivateChatMessage,
   getGroupChatMessage,
 } from "@/composables/ChatMessage";
+import debounce from "@/composables/debounce";
+import { socket } from "@/plugins/socket";
 
 import MessageOption from "@components/Chat/MessageOption.vue";
 import ListIconMessageReaction from "@components/Chat/ListIconMessageReaction.vue";
 import ListAllIconMessageReaction from "@components/Chat/ListAllIconMessageReaction.vue";
 import ListUserSeen from "@components/Chat/ListUserSeen";
-import debounce from "@/composables/debounce";
+import TextTyping from "@components/Chat/TextTyping.vue";
 
 // loading image import
 import loadingImage from "@/assets/images/Rolling-1s-200px.gif";
@@ -280,6 +282,7 @@ export default {
     ListIconMessageReaction,
     ListAllIconMessageReaction,
     ListUserSeen,
+    TextTyping,
   },
   setup(props) {
     const chatScrollBar = ref(null);
@@ -458,9 +461,18 @@ export default {
       }
     );
 
+    const roomKey = ref(null);
+    const listUsersTying = ref([]);
     onMounted(() => {
       // set scroll bar auto bottom when mounted
       chatScrollBar.value.scrollTop = chatScrollBar.value.scrollHeight;
+
+      // socket
+      socket.on("listUsersTyping", (listUsers, room) => {
+        roomKey.value = room;
+        listUsersTying.value = listUsers;
+        console.log(props.chatMessagesKey == roomKey.value);
+      });
     });
 
     return {
@@ -468,22 +480,24 @@ export default {
       messages,
       currentUser,
       chatScrollBar,
+      currentMessageId,
+      checkContainReaction,
+      roomKey,
+      listUsersTying,
+      listUsersSeen,
+      loadingImage,
+      loadingNewMessage,
       isDarkMode,
       isShowListIcon,
       isShowMessageOption,
-      currentMessageId,
       indexMessageReaction,
       isShowAllIcon,
       isShowRemoveMessageOption,
-      loadingImage,
-      loadingNewMessage,
       handleShowListIcon,
       handleReactionMessage,
       handleShowAllIcon,
-      checkContainReaction,
       handleClickSelectMessageRemove,
       handleShowRemoveMessage,
-      listUsersSeen,
       handleScrollBoxMessage,
     };
   },

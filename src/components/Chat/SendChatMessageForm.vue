@@ -22,6 +22,7 @@
         aria-multiline="true"
         spellcheck="false"
         @keydown="handleKeyDownTextInput"
+        @keyup="handleKeyUpTextInput"
       ></div>
       <button type="submit" :class="{ darkMode: isDarkMode }">
         <i class="fa-solid fa-paper-plane"></i>
@@ -35,10 +36,19 @@ import { ref } from "@vue/reactivity";
 import { watch } from "@vue/runtime-core";
 import { isDarkMode } from "@composables/GlobalVariables";
 import { emotionsCode } from "@composables/CharCodeEmoji";
+import { textTyping, stopTyping } from "@composables/TextTyping";
+import debounce from "@composables/debounce";
 
 export default {
   name: "SendChatMessageForm",
-  props: ["chatScrollBar"],
+  props: {
+    chatScrollBar: {
+      type: Object,
+    },
+    roomKey: {
+      type: String,
+    },
+  },
   setup(props, { emit }) {
     const textInput = ref(null);
     const isShowEmotions = ref(false);
@@ -57,6 +67,27 @@ export default {
 
     const handleKeyDownTextInput = (evt) => {
       emit("changeTextMessage", evt, props.chatScrollBar);
+    };
+
+    //handle typing text
+    let isTyping = false;
+    const timeDelay = 1500;
+    const charCodeStart = 32;
+    const charCodeEnd = 127;
+    const handleKeyUpTextInput = (evt) => {
+      if (
+        evt.key.charCodeAt(0) >= charCodeStart &&
+        evt.key.charCodeAt(0) <= charCodeEnd &&
+        evt.key.length == 1 &&
+        !isTyping
+      ) {
+        isTyping = true;
+        textTyping(props.roomKey);
+      }
+      debounce(timeDelay, () => {
+        isTyping = false;
+        stopTyping();
+      });
     };
 
     // event click outside emotion table and close this
@@ -85,6 +116,7 @@ export default {
       handleMouseLeaveEmotionIcon,
       handleClickEmotion,
       handleKeyDownTextInput,
+      handleKeyUpTextInput,
     };
   },
 };
