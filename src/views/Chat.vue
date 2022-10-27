@@ -46,6 +46,7 @@
           <template v-slot:chatForm="{ chatScrollBar }">
             <SendChatMessageForm
               :chatScrollBar="chatScrollBar"
+              :roomKey="chatMessagesKey"
               @changeTextMessage="handleChatMessage"
               @submitSendMessage="handleSubmitMessage"
             >
